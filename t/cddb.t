@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: cddb.t,v 1.11 1999/07/16 12:26:50 troc Exp $
+# $Id: cddb.t,v 1.12 1999/08/13 12:47:13 troc Exp $
 # Copyright 1998 Rocco Caputo E<lt>troc@netrus.netE<gt>.  All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -151,7 +151,11 @@ my @discs = $cddb->get_discs($id, $track_offsets, $total_seconds);
 my ($genre, $cddb_id, $title) = @{$discs[0]};
 ($genre   eq 'classical')                  || print 'not '; print "ok 14\n";
 ($cddb_id eq 'b811a20c')                   || print 'not '; print "ok 15\n";
-($title   eq 'Various / Cartoon Classics') || print 'not '; print "ok 16\n";
+
+( ($title =~ /Various/i) &&
+  ($title =~ /Cartoon\s*Classics/i)
+) || print 'not';
+print "ok 16\n";
 
 ### test macro lookup
 
@@ -225,7 +229,15 @@ foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
   $test_norm =~ tr[a-z ][]cd;
   $test_norm =~ s/\s+/ /g;
 
-  $result = 'not ok' if ($detail_norm ne $test_norm);
+  my $mismatches = 0;
+  foreach my $test_word (split ' ', $test_norm) {
+    $mismatches++ unless ($detail_norm =~ $test_word);
+  }
+
+  if ($mismatches) {
+    $result = 'not ok';
+    last;
+  }
 }
 print "$result 26\n";
 

@@ -1,4 +1,16 @@
-$Id: HISTORY,v 1.5 1999/07/16 20:26:56 troc Exp $
+$Id: HISTORY,v 1.7 1999/08/13 13:17:03 troc Exp $
+
+
+*** 1.02 1999.08.13
+
+Once again, someone has changed the compact disc record that CDDB
+tests against.  This broke tests 16 (disc title) and 26 (track
+titles).  Once again I have made the tests fuzzier, so they will pass
+again.
+
+This version's CDDB.pm is identical to 1.01's, except for the version
+number.
+
 
 *** 1.01 1999.07.16
 
