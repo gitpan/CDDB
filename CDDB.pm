@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.07';
+$VERSION = '1.08';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -29,7 +29,8 @@ use Sys::Hostname;
 # others anyway.
 
 my @cddbp_hosts =
-  ( [ 'freedb.freedb.org' => 8880 ],
+  ( [ 'localhost'         => 8880 ],
+    [ 'freedb.freedb.org' => 8880 ],
     [ 'uk.freedb.org'     => 8880 ],
     [ 'no.freedb.org'     => 8880 ],
     [ 'de.freedb.org'     => 8880 ],
@@ -232,6 +233,10 @@ sub new {
   my $client_version = $param{Client_Version};
   $client_version = $VERSION unless defined $client_version;
 
+  # Change the cddbp protocol level.
+  my $cddb_protocol = $param{Protocol_Version};
+  $cddb_protocol = 1 unless defined $cddb_protocol;
+
   # Mac Freaks Got Spaces!  Augh!
   $login =~ s/\s+/_/g;
 
@@ -246,6 +251,7 @@ sub new {
     debug         => $debug,
     host          => $host,
     port          => $port,
+    cddb_protocol => $cddb_protocol,
     lines         => [],
     frame         => '',
     response_code => '000',
@@ -307,14 +313,15 @@ HOST:
       # TODO: give bad hosts extra chances in case there are transient
       # network problems.
       if ($self->{host} eq '') {
+
+        # None of the servers worked.  Time to leave.
+        unless (@cddbp_hosts) {
+          $self->debug_print( 0, "--- all cddbp servers failed to answer" );
+          return undef;
+        }
+
         $cddbp_host = shift(@cddbp_hosts);
         ($self->{host}, $self->{port}) = @$cddbp_host;
-      }
-
-      # None of the servers worked.  Time to leave.
-      unless (length $self->{host}) {
-        $self->debug_print( 0, "--- all cddbp servers failed to answer" );
-        return undef;
       }
 
       # Assign the host we selected, and attempt a connection.
@@ -384,6 +391,19 @@ HOST:
                           $self->code(), ' ', $self->text()
                         );
       next HANDSHAKE;
+    }
+
+    # Set the protocol level.
+    if ($self->{cddb_protocol} != 1) {
+      $self->command( 'proto', $self->{cddb_protocol} );
+      $code = $self->response();
+      if ($code != 2) {
+        $self->debug_print( 0, "--- can't set protocol level ",
+                            $self->{cddb_protocol}, ' ',
+                            $self->code(), ' ', $self->text()
+                          );
+        return undef;
+      }
     }
 
     # If we get here, everything succeeded.
@@ -525,7 +545,7 @@ ATTEMPT:
     # Send a cddbp query command.
     $self->command( 'cddb query', $id, $track_count,
                     $offsets_string, $total_seconds
-                  );
+                  ) or return undef;
 
     # Get the response.  Try again if the server is temporarly
     # unavailable.
@@ -550,7 +570,9 @@ ATTEMPT:
   return () if $self->code() == 202;
 
   # Multiple matching discs.
-  if ($self->code() == 211) {
+  # 210 Found exact matches, list follows (...)   [proto>=4]
+  # 211 Found inexact matches, list follows (...) [proto>=1]
+  if ($self->code() == 210 or $self->code() == 211) {
     my $discs = $self->read_until_dot();
     return undef unless defined $discs;
 
@@ -616,9 +638,14 @@ sub get_disc_details {
   # Parse that puppy.
 
   my @track_file = @$track_file;
-  my %details = ( offsets => [ ] );
+  my %details = ( offsets => [ ],
+                  seconds => [ ],
+                );
   my $state = 'beginning';
   foreach my $line (@track_file) {
+    # Keep returned so-called xmcd record...
+    $details{xmcd_record} .= $line . "\n";
+
     if ($state eq 'beginning') {
       if ($line =~ /track\s*frame\s*off/i) {
         $state = 'offsets';
@@ -670,6 +697,30 @@ sub get_disc_details {
       }
     }
   }
+
+  # Translate disc offsets into seconds.  This builds a virtual track
+  # 0, which is the time from the beginning of the disc to the
+  # beginning of the first song.  That time's used later to calculate
+  # the final track's length.
+
+  my $last_offset = 0;
+  foreach (@{$details{offsets}}) {
+    push( @{$details{seconds}},
+          int(($_ - $last_offset) / 75)
+        );
+    $last_offset = $_;
+  }
+
+  # Create the final track length from the disc length.  Remove the
+  # virtual track 0 in the process.
+
+  my $disc_length = $details{"disc length"};
+  $disc_length =~ s/ .*$//;
+
+  my $first_start = shift @{$details{seconds}};
+  push( @{$details{seconds}},
+        $disc_length - int($details{offsets}->[-1] / 75) + 1 - $first_start
+      );
 
   \%details;
 }
@@ -847,16 +898,16 @@ CDDB.pm - a high-level interface to cddb protocol servers (freedb and CDDB)
 
   use CDDB;
 
-  ### connect to the cddbp server
-  my $cddbp = new CDDB( Host  => 'freedb.freedb.org',    # default
-                        Port  => 8880,                   # default
-                        Login => $login_id,              # defaults to %ENV's
+  ### Connect to the cddbp server.
+  my $cddbp = new CDDB( Host  => 'freedb.freedb.org', # default
+                        Port  => 8880,                # default
+                        Login => $login_id,           # defaults to %ENV's
                       ) or die $!;
 
-  ### retrieve known genres
+  ### Retrieve known genres.
   my @genres = $cddbp->get_genres();
 
-  ### calculate cddbp ID based on MSF info
+  ### Calculate cddbp ID based on MSF info.
   my @toc = ( '1    0  2 37',           # track, CD-i MSF (space-delimited)
               '999  1 38 17',           # lead-out track MSF
               '1000 0  0 Error!',       # error track (don't include if ok)
@@ -868,22 +919,23 @@ CDDB.pm - a high-level interface to cddb protocol servers (freedb and CDDB)
       $total_seconds  # total play time, in seconds (for cddbp queries)
      ) = $cddbp->calculate_id(@toc);
 
-  ### query discs based on cddbp ID and other information
+  ### Query discs based on cddbp ID and other information.
   my @discs = $cddbp->get_discs($cddbp_id, $track_offsets, $total_seconds);
   foreach my $disc (@discs) {
     my ($genre, $cddbp_id, $title) = @$disc;
   }
 
-  ### query disc details (usually done with get_discs() information)
+  ### Query disc details (usually done with get_discs() information).
   my $disc_info     = $cddbp->get_disc_details($genre, $cddbp_id);
   my $disc_time     = $disc_info->{'disc length'};
   my $disc_id       = $disc_info->{discid};
   my $disc_title    = $disc_info->{dtitle};
   my @track_offsets = @{$disc_info->{offsets}};
+  my @track_seconds = @{$disc_info->{seconds}};
   my @track_titles  = @{$disc_info->{ttitles}};
   # other information may be returned... explore!
 
-  ### submit a disc (via e-mail, requires MailTools)
+  ### Submit a disc via e-mail. (Requires MailTools)
 
   die "can't submit a disc (no mail modules; see README)"
     unless $cddbp->can_submit_disc();
@@ -940,6 +992,10 @@ reasonable defaults.
 B<Host> and B<Port> describe the cddbp server to connect to.  These
 default to 'freedb.freedb.org' and 8880, which is a multiplexor for
 all the other freedb servers.
+
+B<Protocol_Version> sets the cddbp version to use.  CDDB.pm will not
+connect to servers that don't support the version specified here.  The
+requested protocol version defaults to 1 if omitted.
 
 B<Login> is the login ID you want to advertise to the cddbp server.
 It defaults to the login ID your computer assigns you, if that can be
@@ -1138,8 +1194,12 @@ returned by get_discs().
 
 $disc_details->{offsets}
 
-This is a reference to a list of absolute disc trac offsets, similar
+This is a reference to a list of absolute disc track offsets, similar
 to the TRACK_OFFSETS returned by calculate_id().
+
+$disc_details->{seconds}
+
+This is a reference to a list of track length, in seconds.
 
 $disc_details->{ttitles}
 
@@ -1164,6 +1224,11 @@ $disc_details->{"submitted via"}
 This is the name and version of the software that submitted this cddbp
 record.  The main intention is to identify records that are submitted
 by broken software so they can be purged or corrected.
+
+$disc_details->{xmcd_record}
+
+The xmcd_record field contains a copy of the entire unprocessed cddbp
+response that generated all the other fields.
 
 =item can_submit_disc
 
@@ -1276,6 +1341,8 @@ required, and CDDB.pm will try to figure one out on its own.  It will
 look at the SMTPHOSTS environment variable is not defined, it will try
 'mail' and 'localhost' before finally failing.
 
+=back
+
 =head1 PRIVATE METHODS
 
 Documented as being not documented.
@@ -1292,7 +1359,7 @@ done.
 
 =head1 CONTACT AND COPYRIGHT
 
-Copyright 1998-2001 Rocco Caputo E<lt>troc@netrus.netE<gt>.  All
+Copyright 1998-2002 Rocco Caputo E<lt>troc+cddb@pobox.com<gt>.  All
 rights reserved.  This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

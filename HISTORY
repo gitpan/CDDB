@@ -1,5 +1,18 @@
 $Id: HISTORY,v 1.10 2001/05/03 20:31:05 troc Exp troc $
 
+*** 1.08 ????.??.??
+
+Applied henke's patch to support CDDB protocol level 5, if available.
+
+Applied Yannick Le Saint's patch to try localhost:8880.  Made
+localhost the first server to try.
+
+Applied Yannick Le Saint's patch to add a missing =back to the POD.
+
+Jonathan Stowe and Yannick Le Saint supplied patches to avoid dying if
+no cddbp servers are available.  Rocco applied something different to
+achieve the same goal.
+
 *** 1.07 2001.11.18
 
 Fixed t/cddb.t to not care *what* it gets as long as it gets
