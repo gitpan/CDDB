@@ -1,5 +1,16 @@
 $Id: HISTORY,v 1.10 2001/05/03 20:31:05 troc Exp troc $
 
+*** 1.12 2004-02-12
+
+Applied Duncan Martin's patch for submitting year and long genre data.
+
+Performed some long overdue tweaking in the tests.  The CD databases
+are constantly moving targets, and the freedb servers recently
+prohibited multiple queries for the same disc in the same connection.
+Upshot: The tests pass once again.
+
+Cleaned up the code a little in CDDB.pm and cddb.t.
+
 *** 1.11 2003-08-13
 
 Version 1.10 was an empty distribution, because I mistakenly deleted

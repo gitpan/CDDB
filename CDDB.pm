@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.11';
+$VERSION = '1.12';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -28,18 +28,18 @@ use Sys::Hostname;
 # list from freedb.freedb.org, which is a round-robin for all the
 # others anyway.
 
-my @cddbp_hosts =
-  ( [ 'localhost'         => 8880 ],
-    [ 'freedb.freedb.org' => 8880 ],
-    [ 'us.freedb.org',    => 8880 ],
-    [ 'ca.freedb.org',    => 8880 ],
-    [ 'ca2.freedb.org',   => 8880 ],
-    [ 'uk.freedb.org'     => 8880 ],
-    [ 'no.freedb.org'     => 8880 ],
-    [ 'de.freedb.org'     => 8880 ],
-    [ 'at.freedb.org'     => 8880 ],
-    [ 'freedb.freedb.de'  => 8880 ],
-  );
+my @cddbp_hosts = (
+  [ 'localhost'         => 8880 ],
+  [ 'freedb.freedb.org' => 8880 ],
+  [ 'us.freedb.org',    => 8880 ],
+  [ 'ca.freedb.org',    => 8880 ],
+  [ 'ca2.freedb.org',   => 8880 ],
+  [ 'uk.freedb.org'     => 8880 ],
+  [ 'no.freedb.org'     => 8880 ],
+  [ 'de.freedb.org'     => 8880 ],
+  [ 'at.freedb.org'     => 8880 ],
+  [ 'freedb.freedb.de'  => 8880 ],
+);
 
 #------------------------------------------------------------------------------
 # Determine whether we can submit changes by e-mail.
@@ -98,10 +98,10 @@ sub getline {
   }
 
   my $socket = $self->{handle};
-  return undef unless defined $socket;
+  return unless defined $socket;
 
   my $fd = fileno($socket);
-  return undef unless defined $fd;
+  return unless defined $fd;
 
   vec(my $rin = '', $fd, 1) = 1;
   my $timeout = $self->{timeout} || undef;
@@ -112,15 +112,16 @@ sub getline {
     # Fail if the socket is inactive for the timeout period.  Fail
     # also if sysread returns nothing.
 
-    return undef unless select(my $rout=$rin, undef, undef, $timeout);
-    return undef unless defined sysread($socket, my $buf='', 1024);
+    return unless select(my $rout=$rin, undef, undef, $timeout);
+    return unless defined sysread($socket, my $buf='', 1024);
 
     $frame .= $buf;
     my @lines = split(/\x0D?\x0A/, $frame);
-    $frame = ( (length($buf) == 0 || substr($buf, -1, 1) eq "\x0A")
-               ? ''
-               : pop(@lines)
-             );
+    $frame = (
+      (length($buf) == 0 || substr($buf, -1, 1) eq "\x0A")
+      ? ''
+      : pop(@lines)
+    );
     push @{$self->{lines}}, @lines;
   }
 
@@ -143,10 +144,10 @@ sub response {
 
   my $str = $self->getline();
 
-  return undef unless defined($str);
+  return unless defined($str);
 
   # Fail if the line we get isn't the proper format.
-  return undef unless ( ($code, $text) = ($str =~ /^(\d+)\s*(.*?)\s*$/) );
+  return unless ( ($code, $text) = ($str =~ /^(\d+)\s*(.*?)\s*$/) );
 
   $self->{response_code} = $code;
   $self->{response_text} = $text;
@@ -191,7 +192,7 @@ sub read_until_dot {
   my @lines;
 
   while ('true') {
-    my $line = $self->getline() or return undef;
+    my $line = $self->getline() or return;
     last if ($line =~ /^\.$/);
     $line =~ s/^\.\././;
     push @lines, $line;
@@ -214,17 +215,19 @@ sub new {
   my $login = $param{Login} || $ENV{LOGNAME} || $ENV{USER};
   if (not defined $login) {
     if (USING_WINDOWS) {
-      carp( "Can't get login ID.  Use Login parameter or " .
-            "set LOGNAME or USER environment variable.  Using default login " .
-            "ID 'win32usr'"
-          );
+      carp(
+        "Can't get login ID.  Use Login parameter or " .
+        "set LOGNAME or USER environment variable.  Using default login " .
+        "ID 'win32usr'"
+      );
       $login = 'win32usr';
     }
     else {
       $login = getpwuid($>)
-        or croak( "Can't get login ID.  " .
-                  "Set LOGNAME or USER environment variable and try again: $!"
-                );
+        or croak(
+          "Can't get login ID.  " .
+          "Set LOGNAME or USER environment variable and try again: $!"
+        );
     }
   }
 
@@ -259,8 +262,8 @@ sub new {
   # Mac Freaks Got Spaces!  Augh!
   $login =~ s/\s+/_/g;
 
-  my $self = bless
-  { hostname      => $hostname,
+  my $self = bless {
+    hostname      => $hostname,
     login         => $login,
     mail_from     => undef,
     mail_host     => undef,
@@ -340,7 +343,7 @@ HOST:
           $self->debug_print( 0, "--- all cddbp servers failed to answer" );
           warn "No cddb protocol servers answer.  Is your network OK?\n"
             unless $self->{debug};
-          return undef;
+          return;
         }
 
         $cddbp_host = shift(@cddbp_hosts);
@@ -348,24 +351,24 @@ HOST:
       }
 
       # Assign the host we selected, and attempt a connection.
-      $self->debug_print
-        ( 0,
-          "=== connecting to $self->{host} port $self->{port}"
-        );
-      $self->{handle} = new IO::Socket::INET
-        ( PeerAddr => $self->{host},
-          PeerPort => $self->{port},
-          Proto    => 'tcp',
-          Timeout  => 30,
-        );
+      $self->debug_print(
+        0,
+        "=== connecting to $self->{host} port $self->{port}"
+      );
+      $self->{handle} = new IO::Socket::INET(
+        PeerAddr => $self->{host},
+        PeerPort => $self->{port},
+        Proto    => 'tcp',
+        Timeout  => 30,
+      );
 
       # The host did not answer.  Clean up after the failed attempt
       # and cycle to the next host.
       unless (defined $self->{handle}) {
-        $self->debug_print
-          ( 0,
-            "--- error connecting to $self->{host} port $self->{port}: $!"
-          );
+        $self->debug_print(
+          0,
+          "--- error connecting to $self->{host} port $self->{port}: $!"
+        );
         delete $self->{handle};
         $self->{host} = $self->{port} = '';
         next HOST;
@@ -374,10 +377,10 @@ HOST:
       # The host accepted our connection.  We'll push it back on the
       # list of known cddbp hosts so it can be tried later.  And we're
       # done with the host list cycle for now.
-      $self->debug_print
-        ( 0,
-          "+++ successfully connected to $self->{host} port $self->{port}"
-        );
+      $self->debug_print(
+        0,
+        "+++ successfully connected to $self->{host} port $self->{port}"
+      );
       push(@cddbp_hosts, $cddbp_host);
       last HOST;
     }
@@ -391,28 +394,32 @@ HOST:
     # Get the server's banner message.  Try reconnecting if it's bad.
     my $code = $self->response();
     if ($code != 2) {
-      $self->debug_print( 0, "--- bad cddbp response: ",
-                          $self->code(), ' ', $self->text()
-                        );
+      $self->debug_print(
+        0, "--- bad cddbp response: ",
+        $self->code(), ' ', $self->text()
+      );
       next HANDSHAKE;
     }
 
     # Say hello, and wait for a response.
-    $self->command( 'cddb hello',
-                    $self->{login}, $self->{hostname},
-                    $self->{libname}, $self->{libver}
-                  );
+    $self->command(
+      'cddb hello',
+       $self->{login}, $self->{hostname},
+       $self->{libname}, $self->{libver}
+    );
     $code = $self->response();
     if ($code == 4) {
-      $self->debug_print( 0, "--- the server denies us: ",
-                          $self->code(), ' ', $self->text()
-                        );
-      return undef;
+      $self->debug_print(
+        0, "--- the server denies us: ",
+        $self->code(), ' ', $self->text()
+      );
+      return;
     }
     if ($code != 2) {
-      $self->debug_print( 0, "--- the server didn't handshake: ",
-                          $self->code(), ' ', $self->text()
-                        );
+      $self->debug_print(
+        0, "--- the server didn't handshake: ",
+        $self->code(), ' ', $self->text()
+      );
       next HANDSHAKE;
     }
 
@@ -421,11 +428,12 @@ HOST:
       $self->command( 'proto', $self->{cddb_protocol} );
       $code = $self->response();
       if ($code != 2) {
-        $self->debug_print( 0, "--- can't set protocol level ",
-                            $self->{cddb_protocol}, ' ',
-                            $self->code(), ' ', $self->text()
-                          );
-        return undef;
+        $self->debug_print(
+          0, "--- can't set protocol level ",
+          $self->{cddb_protocol}, ' ',
+          $self->code(), ' ', $self->text()
+        );
+        return;
       }
     }
 
@@ -454,18 +462,19 @@ sub get_genres {
 
   $self->command('cddb lscat');
   my $code = $self->response();
-  return undef unless $code;
+  return unless $code;
 
   if ($code == 2) {
     my $genres = $self->read_until_dot();
     return @$genres if defined $genres;
-    return undef;
+    return;
   }
 
-  $self->debug_print( 0, '--- error listing categories: ',
-                      $self->code(), ' ', $self->text()
-                    );
-  return undef;
+  $self->debug_print(
+    0, '--- error listing categories: ',
+    $self->code(), ' ', $self->text()
+  );
+  return;
 }
 
 #------------------------------------------------------------------------------
@@ -481,9 +490,10 @@ sub calculate_id {
   my $self = shift;
   my @toc = @_;
 
-  my ($seconds_previous, $seconds_first, $seconds_last, $cddbp_sum,
-      @track_numbers, @track_lengths, @track_offsets,
-     );
+  my (
+    $seconds_previous, $seconds_first, $seconds_last, $cddbp_sum,
+    @track_numbers, @track_lengths, @track_offsets,
+  );
 
   foreach my $line (@toc) {
     my ($track, $mm_begin, $ss_begin, $ff_begin) = split(/\s+/, $line, 4);
@@ -491,9 +501,10 @@ sub calculate_id {
 
     if (defined $seconds_previous) {
       my $elapsed = $seconds_begin - $seconds_previous;
-      push( @track_lengths,
-            sprintf("%02d:%02d", int($elapsed / 60), $elapsed % 60)
-          );
+      push(
+        @track_lengths,
+        sprintf("%02d:%02d", int($elapsed / 60), $elapsed % 60)
+      );
     }
     else {
       $seconds_first = $seconds_begin;
@@ -508,7 +519,7 @@ sub calculate_id {
     # Track 1000 was chosen for error information.
     if ($track == 1000) {
       $self->debug_print( 0, "error in TOC: $ff_begin" );
-      return undef;
+      return;
     }
 
     map { $cddbp_sum += $_; } split(//, $seconds_begin);
@@ -519,19 +530,19 @@ sub calculate_id {
 
   # Calculate the ID.  Whee!
   my $total_seconds = $seconds_last - $seconds_first;
-  my $id = sprintf
-    ( "%08x",
-      (($cddbp_sum % 255) << 24)
-      | ($total_seconds << 8)
-      | scalar(@track_offsets)
-    );
+  my $id = sprintf(
+    "%08x",
+    (($cddbp_sum % 255) << 24)
+    | ($total_seconds << 8)
+    | scalar(@track_offsets)
+  );
 
   # In list context, we return several things.  Some of them are
   # useful for generating filenames or playlists (the padded track
   # numbers).  Others are needed for cddbp queries.
-  return
-    ($id, \@track_numbers, \@track_lengths, \@track_offsets, $total_seconds)
-      if wantarray();
+  return (
+    $id, \@track_numbers, \@track_lengths, \@track_offsets, $total_seconds
+  ) if wantarray();
 
   # Just return the cddbp ID in scalar context.
   return $id;
@@ -588,38 +599,38 @@ ATTEMPT:
   while ('true') {
 
     # Send a cddbp query command.
-    $self->command( 'cddb query', $id, $track_count,
-                    $offsets_string, $total_seconds
-                  ) or return undef;
+    $self->command(
+      'cddb query', $id, $track_count,
+      $offsets_string, $total_seconds
+    ) or return;
 
     # Get the response.  Try again if the server is temporarly
     # unavailable.
     $code = $self->response();
-    if ($self->code() == 417) {
-      next ATTEMPT;
-    }
+    next ATTEMPT if $self->code() == 417;
     last ATTEMPT;
   }
 
   # Return undef if there's a problem.
-  return undef unless defined $code and $code == 2;
+  return unless defined $code and $code == 2;
 
   # Single matching disc.
   if ($self->code() == 200) {
-    my ($genre, $cddbp_id, $title) =
-      ($self->text() =~ /^(\S+)\s*(\S+)\s*(.*?)\s*$/);
+    my ($genre, $cddbp_id, $title) = (
+      $self->text() =~ /^(\S+)\s*(\S+)\s*(.*?)\s*$/
+    );
     return [ $genre, $cddbp_id, $title ];
   }
 
   # No matching discs.
-  return () if $self->code() == 202;
+  return if $self->code() == 202;
 
   # Multiple matching discs.
   # 210 Found exact matches, list follows (...)   [proto>=4]
   # 211 Found inexact matches, list follows (...) [proto>=1]
   if ($self->code() == 210 or $self->code() == 211) {
     my $discs = $self->read_until_dot();
-    return undef unless defined $discs;
+    return unless defined $discs;
 
     my @matches;
     foreach my $disc (@$discs) {
@@ -631,10 +642,11 @@ ATTEMPT:
   }
 
   # What the heck?
-  $self->debug_print(0, "--- unknown cddbp response: ",
-                     $self->code(), ' ', $self->text()
-                    );
-  return undef;
+  $self->debug_print(
+    0, "--- unknown cddbp response: ",
+    $self->code(), ' ', $self->text()
+  );
+  return;
 }
 
 #------------------------------------------------------------------------------
@@ -675,31 +687,33 @@ sub get_disc_details {
   # force a disconnect/reconnect here if we already did one.
   if (exists $self->{'got tracks before'}) {
     $self->disconnect();
-    $self->connect() or return undef;
+    $self->connect() or return;
   }
   $self->{'got tracks before'} = 'yes';
 
   $self->command('cddb read', $genre, $id);
   my $code = $self->response();
   if ($code != 2) {
-    $self->debug_print( 0, "--- cddbp host could not read the disc record: ",
-                        $self->code(), ' ', $self->text()
-                      );
-    return undef;
+    $self->debug_print(
+      0, "--- cddbp host could not read the disc record: ",
+      $self->code(), ' ', $self->text()
+    );
+    return;
   }
 
   my $track_file;
   unless (defined($track_file = $self->read_until_dot())) {
     $self->debug_print( 0, "--- cddbp disc record interrupted" );
-    return undef;
+    return;
   }
 
   # Parse that puppy.
 
   my @track_file = @$track_file;
-  my %details = ( offsets => [ ],
-                  seconds => [ ],
-                );
+  my %details = (
+    offsets => [ ],
+    seconds => [ ],
+  );
   my $state = 'beginning';
   foreach my $line (@track_file) {
     # Keep returned so-called xmcd record...
@@ -736,9 +750,9 @@ sub get_disc_details {
 
     # This is not an elsif on purpose.
     if ($state eq 'data') {
-      next unless (my ($tag, $idx, $val) =
-                   ($line =~ /^\s*(.+?)(\d*)\s*\=\s*(.+?)\s*$/)
-                  );
+      next unless (
+        my ($tag, $idx, $val) = ($line =~ /^\s*(.+?)(\d*)\s*\=\s*(.+?)\s*$/)
+      );
       $tag = lc($tag);
 
       if ($idx ne '') {
@@ -765,9 +779,7 @@ sub get_disc_details {
 
   my $last_offset = 0;
   foreach (@{$details{offsets}}) {
-    push( @{$details{seconds}},
-          int(($_ - $last_offset) / 75)
-        );
+    push @{$details{seconds}}, int(($_ - $last_offset) / 75);
     $last_offset = $_;
   }
 
@@ -778,9 +790,10 @@ sub get_disc_details {
   $disc_length =~ s/ .*$//;
 
   my $first_start = shift @{$details{seconds}};
-  push( @{$details{seconds}},
-        $disc_length - int($details{offsets}->[-1] / 75) + 1 - $first_start
-      );
+  push(
+    @{$details{seconds}},
+    $disc_length - int($details{offsets}->[-1] / 75) + 1 - $first_start
+  );
 
   \%details;
 }
@@ -834,10 +847,9 @@ sub submit_disc {
   my $self = shift;
   my %params = @_;
 
-  croak( "submit_disc needs " .
-         "Mail::Internet, Mail::Header, and MIME::QuotedPrint"
-       )
-    unless $imported_mail;
+  croak(
+    "submit_disc needs Mail::Internet, Mail::Header, and MIME::QuotedPrint"
+  ) unless $imported_mail;
 
   # Try yet again to fetch the hostname.  Fail if we cannot.
   unless (defined $self->{hostname}) {
@@ -852,6 +864,19 @@ sub submit_disc {
   (exists $params{TrackTitles}) or croak "submit_disc needs TrackTitles";
   (exists $params{Offsets})     or croak "submit_disc needs Offsets";
   (exists $params{Revision})    or croak "submit_disc needs a Revision";
+  if (exists $params{Year}) {
+    unless ($params{Year} =~ /^\d{4}$/) {
+      croak "submit_disc needs a 4 digit year";
+    }
+  }
+  if (exists $params{GenreLong}) {
+    unless ($params{GenreLong} =~ /^([A-Z][a-zA-Z0-9]*\s?)+$/) {
+      croak(
+        "GenreLong must start with a capital letter and contain only " .
+        "letters and numbers"
+      );
+    }
+  }
 
   # Try to find a mail host.  We could probably grab the MX record for
   # the current machine, but that would require yet more strange
@@ -877,20 +902,28 @@ sub submit_disc {
   $header->add( Subject => "cddb $params{Genre} $params{Id}" );
 
   # Build the submission's body.
-  my @message_body =
-    ( '# xmcd',
-      '#',
-      '# Track frame offsets:',
-      map({ "#\t" . $_; } @{$params{Offsets}}),
-      '#',
-      '# Disc length: ' . (hex(substr($params{Id},2,4))+2) . ' seconds',
-      '#',
-      "# Revision: " . $params{Revision},
-      '# Submitted via: ' . $self->{libname} . ' ' . $self->{libver},
-      '#',
-      'DISCID=' . $params{Id},
-      'DTITLE=' . $params{Artist} . ' / ' . $params{DiscTitle},
-    );
+  my @message_body = (
+    '# xmcd',
+    '#',
+    '# Track frame offsets:',
+    map({ "#\t" . $_; } @{$params{Offsets}}),
+    '#',
+    '# Disc length: ' . (hex(substr($params{Id},2,4))+2) . ' seconds',
+    '#',
+    "# Revision: " . $params{Revision},
+    '# Submitted via: ' . $self->{libname} . ' ' . $self->{libver},
+    '#',
+    'DISCID=' . $params{Id},
+    'DTITLE=' . $params{Artist} . ' / ' . $params{DiscTitle},
+  );
+
+  # add year and genre
+  if (exists $params{Year}) {
+    push @message_body, 'DYEAR='.$params{Year};
+  }
+  if (exists $params{GenreLong}) {
+    push @message_body, 'DGENRE='.$params{GenreLong};
+  }
 
   # Dump the track titles.
   my $number = 0;
@@ -917,11 +950,11 @@ sub submit_disc {
   }
 
   # Bundle the headers and body into an Internet mail.
-  my $mail = new Mail::Internet
-    ( undef,
-      Header => $header,
-      Body   => \@message_body,
-    );
+  my $mail = new Mail::Internet(
+    undef,
+    Header => $header,
+    Body   => \@message_body,
+  );
 
   # Try to send it using the "mail" utility.  This is commented out:
   # it strips the MIME headers from the message, invalidating the
@@ -946,7 +979,7 @@ sub submit_disc {
 
   # Augh!  Everything failed!
   $self->debug_print( 0, '--- could not find a way to submit a disc' );
-  return undef;
+  return;
 }
 
 ###############################################################################

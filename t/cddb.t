@@ -16,19 +16,21 @@ my ($i, $result);
 
 ### test connecting
 
-my $cddb = new CDDB( Host           => 'freedb.freedb.org',
-                     Port           => 8880,
-                     Submit_Address => 'test-submit@freedb.org',
-                     Debug          => 0,
-                   );
+my $cddb = new CDDB(
+  Host           => 'freedb.freedb.org',
+  Port           => 8880,
+  Submit_Address => 'test-submit@freedb.org',
+  Debug          => 0,
+);
 
 defined($cddb) || print 'not '; print "ok 1\n";
 
 ### test genres
 
-my @test_genres = qw(blues classical country data folk jazz misc newage
-                     reggae rock soundtrack
-                    );
+my @test_genres = qw(
+  blues classical country data folk jazz misc newage reggae rock
+  soundtrack
+);
 my @cddb_genres = $cddb->get_genres();
 
 if (@cddb_genres) {
@@ -76,20 +78,21 @@ sub not_near {
 #
 # Sample TOC information:
 
-my @toc = ( "1   0  2  37",  # track  1 starts at 00:02 and 37 frames
-            "2   1  38 17",  # track  2 starts at 01:38 and 17 frames
-            "3   11 57 30",  # track  3 starts at 11:57 and 30 frames
-            "4   16 26 25",  # track  4 starts at 16:26 and 25 frames
-            "5   18 48 7",   # track  5 starts at 18:48 and 7  frames
-            "6   23 46 42",  # track  6 starts at 23:46 and 42 frames
-            "7   35 15 20",  # track  7 starts at 35:15 and 20 frames
-            "8   39 18 12",  # track  8 starts at 39:18 and 12 frames
-            "9   48 38 47",  # track  9 starts at 48:38 and 47 frames
-            "10  51 45 7",   # track 10 starts at 51:45 and 7  frames
-            "11  61 6  32",  # track 11 starts at 61:06 and 32 frames
-            "12  66 34 30",  # track 12 starts at 66:34 and 30 frames
-            "999 75 16 5",   # leadout  starts at 75:15 and 5  frames
-          );
+my @toc = (
+  "1   0  2  37",  # track  1 starts at 00:02 and 37 frames
+  "2   1  38 17",  # track  2 starts at 01:38 and 17 frames
+  "3   11 57 30",  # track  3 starts at 11:57 and 30 frames
+  "4   16 26 25",  # track  4 starts at 16:26 and 25 frames
+  "5   18 48 7",   # track  5 starts at 18:48 and 7  frames
+  "6   23 46 42",  # track  6 starts at 23:46 and 42 frames
+  "7   35 15 20",  # track  7 starts at 35:15 and 20 frames
+  "8   39 18 12",  # track  8 starts at 39:18 and 12 frames
+  "9   48 38 47",  # track  9 starts at 48:38 and 47 frames
+  "10  51 45 7",   # track 10 starts at 51:45 and 7  frames
+  "11  61 6  32",  # track 11 starts at 61:06 and 32 frames
+  "12  66 34 30",  # track 12 starts at 66:34 and 30 frames
+  "999 75 16 5",   # leadout  starts at 75:15 and 5  frames
+);
 
 ### calculate CDDB ID
 
@@ -100,12 +103,14 @@ my ($id, $track_numbers, $track_lengths, $track_offsets, $total_seconds) =
 &not_near($total_seconds, 4514) && print 'not '; print "ok 6\n";
 
 my @test_numbers = qw(001 002 003 004 005 006 007 008 009 010 011 012);
-my @test_lengths = qw(01:36 10:19 04:29 02:22 04:58 11:29
-                      04:03 09:20 03:07 09:21 05:28 08:42
-                     );
-my @test_offsets = qw(187 7367 53805 73975 84607 106992 158645 176862
-                      218897 232882 274982 299580
-                     );
+my @test_lengths = qw(
+  01:36 10:19 04:29 02:22 04:58 11:29
+  04:03 09:20 03:07 09:21 05:28 08:42
+);
+my @test_offsets = qw(
+  187 7367 53805 73975 84607 106992 158645 176862
+  218897 232882 274982 299580
+);
 
 if (@$track_numbers == @test_numbers) {
   print "ok 7\n";
@@ -153,26 +158,32 @@ my @discs = $cddb->get_discs($id, $track_offsets, $total_seconds);
 (@discs == 1) || print 'not '; print "ok 13\n";
 
 my ($genre, $cddb_id, $title) = @{$discs[0]};
-($genre   eq 'classical')                  || print 'not '; print "ok 14\n";
-($cddb_id eq 'b811a20c')                   || print 'not '; print "ok 15\n";
+($genre   eq 'classical') || print 'not '; print "ok 14\n";
+($cddb_id eq 'b811a20c')  || print 'not '; print "ok 15\n";
 
-( ($title =~ /Various/i) &&
-  ($title =~ /Cartoon\s*Classics/i)
-) || print 'not';
-print "ok 16\n";
+print 'not ' unless $title =~ /Cartoon\s*Classics/i;
+print "ok 16 # $title\n";
 
 ### test macro lookup
 
+$cddb->disconnect();
 my @other_discs = $cddb->get_discs_by_toc(@toc);
 
-(@other_discs == 1) || print 'not '; print "ok 17\n";
-($other_discs[0]->[0] eq $discs[0]->[0]) || print 'not '; print "ok 18\n";
-($other_discs[0]->[1] eq $discs[0]->[1]) || print 'not '; print "ok 19\n";
-($other_discs[0]->[2] eq $discs[0]->[2]) || print 'not '; print "ok 20\n";
-
+if (@other_discs) {
+  (@other_discs == 1) || print 'not '; print "ok 17\n";
+  ($other_discs[0]->[0] eq $discs[0]->[0]) || print 'not '; print "ok 18\n";
+  ($other_discs[0]->[1] eq $discs[0]->[1]) || print 'not '; print "ok 19\n";
+  ($other_discs[0]->[2] eq $discs[0]->[2]) || print 'not '; print "ok 20\n";
+}
+else {
+  for (17..20) {
+    print "not ok $_ # no result\n";
+  }
+}
 
 ### test gathering disc details
 
+$cddb->disconnect();
 my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
 
 # -><- uncomment if you'd like to see all the details
@@ -187,7 +198,7 @@ my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
 # }
 
 ($disc_info->{'disc length'} eq '4516 seconds') || print 'not ';
-print "ok 21\n";
+print "ok 21 # $disc_info->{'disc length'}\n";
 
 ($disc_info->{'discid'} eq $cddb_id) || print 'not ';
 print "ok 22\n";
@@ -208,29 +219,29 @@ else {
   print "not ok 25\n";
 }
 
-my @test_titles = ( "Comedian's Gallop / Kabalevsky",
-                    "Dance of the Hours / Ponchielli",
-                    "The Sleeping Beauty Waltz / Tchaikovsky",
-                    "The Barber of Seville: Overture-Conclusion / Rossini",
-                    "The Barber of Seville: Largo al Factotum / Rossini",
-                    "The Sorcerer's Apprentice / Dukas",
-                    "Tannhauser: Pilgrim's Chorus / Wagner",
-                    "Toccata and Fugue in D Minor, BWV 565 / Bach",
-                    "William Tell: Overture-Conclusion / Rossini",
-                    "Morning, Noon and Night in Vienna: Overture / Suppe",
-                    "Ride of the Valkyries / Wagner",
-                    "Hungarian Rhapsody No. 2 / Liszt"
-                  );
+my @test_titles = (
+  "Comedian's Gallop / Kabalevsky",
+  "Dance of the Hours / Ponchielli",
+  "The Sleeping Beauty Waltz / Tchaikovsky",
+  "The Barber of Seville: Overture-Conclusion / Rossini",
+  "The Barber of Seville: Largo al Factotum / Rossini",
+  "The Sorcerer's Apprentice / Dukas",
+  "Tannhauser: Pilgrim's Chorus / Wagner",
+  "Toccata and Fugue in D Minor, BWV 565 / Bach",
+  "William Tell: Overture-Conclusion / Rossini",
+  "Morning, Noon and Night in Vienna: Overture / Suppe",
+  "Ride of the Valkyries / Wagner",
+  "Hungarian Rhapsody No. 2 / Liszt"
+);
 
 # Augh! Someone borked this disc's record, killing the title for
 # Wagner's track!  We will accept this test if at least half the
 # tracks are ok.
 
-my $ok_tracks = 0;
-$i = 0; $result = 'ok';
-foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
-  my ($detail_norm, $test_norm) = (lc($detail_title), lc($test_titles[$i++]));
-                                        # quick normalization for approx match
+sub detail_is_ok {
+  my ($detail_norm, $test_norm) = @_;
+
+  # quick normalization for approx match
   $detail_norm =~ tr[aeiouy][]d;
   $detail_norm =~ tr[a-z ][]cd;
   $detail_norm =~ s/\s+/ /g;
@@ -239,24 +250,34 @@ foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
   $test_norm =~ s/\s+/ /g;
 
   my $mismatches = 0;
-  foreach my $test_word (split ' ', $test_norm) {
-    $mismatches++ unless ($detail_norm =~ $test_word);
+  foreach my $detail_word (split ' ', $detail_norm) {
+    $mismatches++ unless $test_norm =~ $detail_word;
   }
 
-  next if $mismatches;
+  return if $mismatches;
+  return 1;
+}
+
+my $ok_tracks = 0;
+$i = 0; $result = 'ok';
+foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
+  my ($detail_norm, $test_norm) = (lc($detail_title), lc($test_titles[$i++]));
+
+  next unless detail_is_ok($detail_norm, $test_norm);
   $ok_tracks++;
 }
 
 print "not " unless $ok_tracks >= @test_titles / 2;
-print "ok 26\n";
+print "ok 26 # $ok_tracks >= ", (@test_titles / 2), " ?\n";
 
 ### test fuzzy matches ("the freeside tests")
 
 $id = 'a70cfb0c';
 $total_seconds = 3323;
-my @fuzzy_offsets = qw(0 20700 37275 57975 78825 102525 128700 148875 167100
-                       184500 209250 229500
-                      );
+my @fuzzy_offsets = qw(
+  0 20700 37275 57975 78825 102525 128700 148875 167100 184500 209250
+  229500
+);
 
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
 @discs || print 'not '; print "ok 27\n";
@@ -285,19 +306,19 @@ else {
 
 if ($cddb->can_submit_disc()) {
   eval {
-    $cddb->submit_disc
-      ( Genre       => 'classical',
-        Id          => 'b811a20c',
+    $cddb->submit_disc(
+      Genre       => 'classical',
+      Id          => 'b811a20c',
 
-        # iso-8859-1 u with diaeresis (umlaut) for testing
-        Artist      => "Vario\xDCs",
-        DiscTitle   => 'Cartoon Classics',
-        Offsets     => $disc_info->{'offsets'},
-        TrackTitles => $disc_info->{'ttitles'},
+      # iso-8859-1 u with diaeresis (umlaut) for testing
+      Artist      => "Vario\xDCs",
+      DiscTitle   => 'Cartoon Classics',
+      Offsets     => $disc_info->{'offsets'},
+      TrackTitles => $disc_info->{'ttitles'},
 
-        # odd revision for testing
-        Revision    => 123,
-      );
+      # odd revision for testing
+      Revision    => 123,
+    );
     print "ok 32\n";
   };
 
@@ -312,9 +333,10 @@ if ($cddb->can_submit_disc()) {
 
                                         # skip when needed modules are missing
 else {
-  print( "ok 32 # Skip - Mail::Internet; Mail::Header; and MIME::QuotedPrint ",
-         "are needed to submit discs\n"
-       );
+  print(
+    "ok 32 # Skip - Mail::Internet; Mail::Header; and MIME::QuotedPrint ",
+    "are needed to submit discs\n"
+  );
 }
 
 ### Test fetch-by-query.

@@ -5,3 +5,4 @@ MANIFEST
 Makefile.PL
 README
 t/cddb.t
+META.yml                                 Module meta-data (added by MakeMaker)
