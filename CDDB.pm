@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.14 1999/01/10 16:52:23 troc Exp $
+# $Id: CDDB.pm,v 1.16 1999/07/16 12:28:25 troc Exp $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -31,7 +31,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = "0.07";
+$VERSION = "1.00";
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
