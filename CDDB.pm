@@ -8,7 +8,16 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.06';
+$VERSION = '1.07';
+
+BEGIN {
+  if ($^O eq 'MSWin32') {
+    eval 'sub USING_WINDOWS () { 1 }';
+  }
+  else {
+    eval 'sub USING_WINDOWS () { 0 }';
+  }
+}
 
 use IO::Socket;
 use Sys::Hostname;
@@ -182,8 +191,22 @@ sub new {
   my $hostname = &hostname();
 
   # Attempt to suss our login ID.
-  my $login = $param{Login} || $ENV{LOGNAME} || $ENV{USER} ||
-    getpwuid($>) || croak "can't get login: $!";
+  my $login = $param{Login} || $ENV{LOGNAME} || $ENV{USER};
+  if (not defined $login) {
+    if (USING_WINDOWS) {
+      carp( "Can't get login ID.  Use Login parameter or " .
+            "set LOGNAME or USER environment variable.  Using default login " .
+            "ID 'win32usr'"
+          );
+      $login = 'win32usr';
+    }
+    else {
+      $login = getpwuid($>)
+        or croak( "Can't get login ID.  " .
+                  "Set LOGNAME or USER environment variable and try again: $!"
+                );
+    }
+  }
 
   # Debugging flag.
   my $debug = $param{Debug};
@@ -350,6 +373,12 @@ HOST:
                     $self->{libname}, $self->{libver}
                   );
     $code = $self->response();
+    if ($code == 4) {
+      $self->debug_print( 0, "--- the server denies us: ",
+                          $self->code(), ' ', $self->text()
+                        );
+      return undef;
+    }
     if ($code != 2) {
       $self->debug_print( 0, "--- the server didn't handshake: ",
                           $self->code(), ' ', $self->text()
@@ -914,7 +943,10 @@ all the other freedb servers.
 
 B<Login> is the login ID you want to advertise to the cddbp server.
 It defaults to the login ID your computer assigns you, if that can be
-determined.
+determined.  The default login ID is determined by the presence of a
+LOGNAME or USER environment variable, or by the getpwuid() function.
+On Windows systems, it defaults to "win32usr" if no default method can
+be found and no Login parameter is set.
 
 B<Submit_Address> is the e-mail address where new disc submissions go.
 This defaults to 'freedb-submit@freedb.org'.

@@ -1,6 +1,11 @@
 $Id: HISTORY,v 1.10 2001/05/03 20:31:05 troc Exp troc $
 
-*** 1.06 2001.??.??
+*** 1.07 2001.11.18
+
+Fixed t/cddb.t to not care *what* it gets as long as it gets
+something.
+
+*** 1.06 2001.07.17
 
 Added get_mail_host() and get_mail_address() methods to query what the
 module thinks your SMTP host and e-mail address are.  Their purpose is
@@ -18,6 +23,11 @@ to honor its documented Revision parameter.
 Fixed submit_disc() to transmit e-mail submissions using ISO-8859-1
 (Latin 1) and quoted-printable.  What's this mean?  Basically: Western
 European characters won't get mangled by intermediate mail servers.
+
+Drew Taylor discovered that the tests fail on MSWin32 because
+getpwuid() isn't implemented on that platform.  Worked around its
+absence on MSWin32 systems, and documented this bit of CDDB more
+carefully.
 
 *** 1.05 2001.05.03
 
