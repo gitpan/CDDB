@@ -1,5 +1,13 @@
 $Id: HISTORY,v 1.10 2001/05/03 20:31:05 troc Exp troc $
 
+*** 1.13 2004-09-01
+
+Applied Steve James' patch to improve dead connection detection.  It
+prevents harmless yet annoying warnings.
+
+Applied Ronan Waide's patch to expose the XMCD file parsing code.  The
+new method is parse_xmcd_file().
+
 *** 1.12 2004-02-12
 
 Applied Duncan Martin's patch for submitting year and long genre data.

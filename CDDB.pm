@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.12';
+$VERSION = '1.13';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -70,7 +70,7 @@ sub command {
   my $self = shift;
   my $str = join(' ', @_);
 
-  unless (exists $self->{handle}) {
+  unless ($self->{handle}) {
     $self->connect() or return 0;
   }
 
@@ -289,7 +289,7 @@ sub new {
 
 sub disconnect {
   my $self = shift;
-  if (exists $self->{handle}) {
+  if ($self->{handle}) {
     $self->command('quit');     # quit
     $self->response();          # wait for any response
     delete $self->{handle};     # close the socket
@@ -709,7 +709,14 @@ sub get_disc_details {
 
   # Parse that puppy.
 
-  my @track_file = @$track_file;
+  return parse_xmcd_file(@$track_file);
+}
+
+# Arf!
+
+sub parse_xmcd_file {
+  my @track_file = @_;
+
   my %details = (
     offsets => [ ],
     seconds => [ ],
@@ -795,7 +802,7 @@ sub get_disc_details {
     $disc_length - int($details{offsets}->[-1] / 75) + 1 - $first_start
   );
 
-  \%details;
+  return \%details;
 }
 
 ###############################################################################
@@ -1342,6 +1349,11 @@ $disc_details->{xmcd_record}
 
 The xmcd_record field contains a copy of the entire unprocessed cddbp
 response that generated all the other fields.
+
+=item parse_xmcd_file XMCD_FILE_CONTENTS
+
+Parses an array of lines read from an XMCD file into the disc_details
+hash described above.
 
 =item can_submit_disc
 
