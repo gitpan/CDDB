@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.19 1999/08/13 13:16:12 troc Exp $
+# $Id: CDDB.pm,v 1.22 2000/04/30 02:33:11 troc Exp $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -15,9 +15,9 @@ use Sys::Hostname;
 # list of known cddb servers
 
 my @cddb_hosts =
-  ( [ 'us.cddb.com',    8880 ],
-    [ 'in.us.cddb.com', 8880 ],
-    [ 'ca.us.cddb.com', 8880 ],
+  ( [ 'cddb.cddb.com'     => 8880 ],
+    [ 'sj.ca.us.cddb.com' => 8880 ],
+    [ 'sc.ca.us.cddb.com' => 8880 ],
   );
 
 #------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = 1.02;
+$VERSION = '1.03';
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
@@ -40,17 +40,17 @@ sub command {
   my $self = shift;
   my $str = join(' ', @_);
 
-  unless ($self->{'handle'}) {
+  unless (exists $self->{handle}) {
     $self->connect() or return 0;
   }
 
   $self->debug_print(0, '>>> ', $str)
-    if ($self->{'debug'});
+    if ($self->{debug});
 
   my $len = length($str .= "\x0D\x0A");
 
   local $SIG{PIPE} = 'IGNORE' unless ($^O eq 'MacOS');
-  return 0 unless(syswrite($self->{'handle'}, $str, $len) == $len);
+  return 0 unless(syswrite($self->{handle}, $str, $len) == $len);
   return 1;
 }
 
@@ -59,18 +59,18 @@ sub command {
 sub getline {
   my $self = shift;
 
-  if (@{$self->{'lines'}}) {
-    return shift @{$self->{'lines'}};
+  if (@{$self->{lines}}) {
+    return shift @{$self->{lines}};
   }
 
-  my $fd = fileno(my $socket = $self->{'handle'});
+  my $fd = fileno(my $socket = $self->{handle});
   return undef unless defined $fd;
 
   vec(my $rin = '', $fd, 1) = 1;
-  my $timeout = $self->{'timeout'} || undef;
-  my $frame = $self->{'frame'};
+  my $timeout = $self->{timeout} || undef;
+  my $frame = $self->{frame};
 
-  until (@{$self->{'lines'}}) {
+  until (@{$self->{lines}}) {
 
     if (select(my $rout=$rin, undef, undef, $timeout)) {
       if (sysread($socket, my $buf='', 1024)) {
@@ -79,13 +79,13 @@ sub getline {
         $frame = (length($buf) == 0 || substr($buf, -1, 1) eq "\x0A")
           ? ''
           : pop(@lines);
-        push @{$self->{'lines'}}, @lines;
+        push @{$self->{lines}}, @lines;
       }
     }
   }
 
-  $self->{'frame'} = $frame;
-  shift @{$self->{'lines'}};
+  $self->{frame} = $frame;
+  shift @{$self->{lines}};
 }
 
 #------------------------------------------------------------------------------
@@ -100,11 +100,11 @@ sub response {
     unless defined($str);
 
   $self->debug_print(0, '<<< ', $str)
-    if ($self->{'debug'});
+    if ($self->{debug});
 
   ($code, $text) = ($str =~ /^(\d+)\s*(.*?)\s*$/);
-  $self->{'response code'} = $code;
-  $self->{'response text'} = $text;
+  $self->{response_code} = $code;
+  $self->{response_text} = $text;
 
   substr($code, 0, 1);
 }
@@ -113,7 +113,7 @@ sub response {
 
 sub message {
   my $self = shift;
-  $self->{'response text'};
+  $self->{response_text};
 }
 
 #------------------------------------------------------------------------------
@@ -129,12 +129,12 @@ sub debug_print {
 
 sub code {
   my $self = shift;
-  $self->{'response code'};
+  $self->{response_code};
 }
 
 sub text {
   my $self = shift;
-  $self->{'response text'};
+  $self->{response_text};
 }
 
 #------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ sub read_until_dot {
   while ('true') {
     my $line = $self->getline() or return undef;
     $self->debug_print(0, $line)
-      if ($self->{'debug'});
+      if ($self->{debug});
     last if ($line =~ /^\.$/);
     $line =~ s/^\.\././;
     push @lines, $line;
@@ -163,28 +163,28 @@ sub new {
   my $type = shift;
   my %param = @_;
 
-  my $hostname = &hostname() || croak "can't get hostname: $!";
-  my $login = $param{Login} || $ENV{'LOGNAME'} || $ENV{'USER'} ||
+  my $hostname = &hostname();
+  my $login = $param{Login} || $ENV{LOGNAME} || $ENV{USER} ||
     getpwuid($<) || croak "can't get login: $!";
-  my $debug = $param{'Debug'} || 0;
-  my $host  = $param{'Host'} || '';
-  my $port  = $param{'Port'} || 0;
+  my $debug = $param{Debug} || 0;
+  my $host  = $param{Host} || '';
+  my $port  = $param{Port} || 0;
                                         # Mac Freaks Got Spaces!
   $login =~ s/\s+/_/g;
 
   my $self = bless
-  { 'hostname' => $hostname,
-    'login'    => $login,
-    'libname'  => 'CDDB.pm',
-    'libver'   => $VERSION,
-    'cddbmail' => 'cddb-test@submit.cddb.com',
-    'debug'    => $debug,
-    'host'     => $host,
-    'port'     => $port,
-    'lines'    => [],
-    'frame'    => '',
-    'response code' => '000',
-    'response text' => '',
+  { hostname      => $hostname,
+    login         => $login,
+    libname       => 'CDDB.pm',
+    libver        => $VERSION,
+    cddbmail      => 'cddb-test@submit.cddb.com',
+    debug         => $debug,
+    host          => $host,
+    port          => $port,
+    lines         => [],
+    frame         => '',
+    response_code => '000',
+    response_text => '',
   }, $type;
 
   $self;
@@ -194,10 +194,10 @@ sub new {
 
 sub disconnect {
   my $self = shift;
-  if (exists $self->{'handle'}) {
+  if (exists $self->{handle}) {
     $self->command('quit');
     $self->response();
-    delete $self->{'handle'};
+    delete $self->{handle};
   }
   elsif ($self->{debug}) {
     carp "disconnect on unconnected handle";
@@ -208,36 +208,53 @@ sub disconnect {
 
 sub connect {
   my $self = shift;
+
+  unless (defined $self->{hostname}) {
+    $self->{hostname} = &hostname() or croak "can't get hostname: $!";
+  }
                                         # try each possible host, in order
 HOST:
   while ('true') {
-    $self->disconnect()
-      if (exists $self->{'handle'});
+    # Hard disconnect here to prevent recursion.
+    delete $self->{handle};
                                         # cycle to next host
-    if ($self->{'host'} eq '') {
+    if ($self->{host} eq '') {
       my $cddb_host = shift(@cddb_hosts);
       die "ran out of CDDB hosts to query today\n"
         unless ($cddb_host);
-      ($self->{'host'}, $self->{'port'}) = @$cddb_host;
+      ($self->{host}, $self->{port}) = @$cddb_host;
       warn "trying $self->{host}:$self->{port}...\n";
     }
 
-    $self->{'handle'} = new IO::Socket::INET( 'PeerAddr' => $self->{host},
-                                              'PeerPort' => $self->{port},
-                                              'Proto'    => 'tcp',
-                                              'Timeout'  => 15,
-                                            );
-    unless (defined $self->{'handle'}) {
+    $self->{handle} = new IO::Socket::INET( PeerAddr => $self->{host},
+                                            PeerPort => $self->{port},
+                                            Proto    => 'tcp',
+                                            Timeout  => 15,
+                                          );
+
+    # The host could not connect.  Clean up after the failed attempt
+    # and cycle to the next host.
+    unless (defined $self->{handle}) {
       warn "could not connect to $self->{host} $self->{port}: $!\n";
-      push(@cddb_hosts, [ $self->{host}, $self->{port} ]);
-      delete $self->{'handle'};
+      delete $self->{handle};
       $self->{host} = $self->{port} = '';
       next HOST;
     }
+
+    # The host accepted our connection.  We'll push it back on the
+    # list of known CDDB hosts so it can be tried later.  And we're
+    # done with the host list cycle for now.
+    push(@cddb_hosts, [ $self->{host}, $self->{port} ]);
     last HOST;
   }
 
-  select((select($self->{'handle'}), $|=1)[0]);
+  unless (defined $self->{handle}) {
+    $self->{response_text} = "could not contact a server";
+    $self->{response_code} = 0;
+    return $self->code();
+  }
+
+  select((select($self->{handle}), $|=1)[0]);
 
   my $code = $self->response();
   if ($code != 2) {
@@ -246,7 +263,7 @@ HOST:
   }
   else {
     $self->command( 'cddb hello',
-                     $self->{login}, $self->{'hostname'},
+                     $self->{login}, $self->{hostname},
                      $self->{libname}, $self->{libver}
                   );
     $code = $self->response();
@@ -364,8 +381,9 @@ sub get_discs {
                                         # attempt to query over and over
 ATTEMPT:
   while ('true') {
-    $self->command('cddb query', $id, $track_count,
-                   $offsets_string, $total_seconds);
+    $self->command( 'cddb query', $id, $track_count,
+                    $offsets_string, $total_seconds
+                  );
     $code = $self->response();
     if ($self->code() == 417) {
       next ATTEMPT;
@@ -407,7 +425,7 @@ ATTEMPT:
 sub get_discs_by_toc {
   my $self = shift;
   my (@info, @discs);
-  if (defined(@info = $self->calculate_id(@_))) {
+  if (@info = $self->calculate_id(@_)) {
     @discs = $self->get_discs(@info[0, 3, 4]);
   }
   @discs;
@@ -421,7 +439,7 @@ sub get_disc_details {
                                         # becasue CDDB only allows one per
   if (exists $self->{'got tracks before'}) {
     $self->disconnect();
-    $self->connect();
+    $self->connect() or return undef;
   }
   $self->{'got tracks before'} = 'yes';
 
@@ -512,50 +530,54 @@ sub submit_disc {
           "not to be installed";
   }
 
-  (exists $params{'Genre'})       or croak "submit_disc needs a Genre";
-  (exists $params{'Id'})          or croak "submit_disc needs an Id";
-  (exists $params{'Artist'})      or croak "submit_disc needs an Artist";
-  (exists $params{'DiscTitle'})   or croak "submit_disc needs a DiscTitle";
-  (exists $params{'TrackTitles'}) or croak "submit_disc needs TrackTitles";
-  (exists $params{'Offsets'})     or croak "submit_disc needs Offsets";
+  unless (defined $self->{hostname}) {
+    $self->{hostname} = &hostname() or croak "can't get hostname: $!";
+  }
+
+  (exists $params{Genre})       or croak "submit_disc needs a Genre";
+  (exists $params{Id})          or croak "submit_disc needs an Id";
+  (exists $params{Artist})      or croak "submit_disc needs an Artist";
+  (exists $params{DiscTitle})   or croak "submit_disc needs a DiscTitle";
+  (exists $params{TrackTitles}) or croak "submit_disc needs TrackTitles";
+  (exists $params{Offsets})     or croak "submit_disc needs Offsets";
 
   my $host;
-  if (exists $params{'Host'}) {
-    $host = $params{'Host'};
+  if (exists $params{Host}) {
+    $host = $params{Host};
   }
-  elsif (exists $ENV{'SMTPHOSTS'}) {
-    $host = $ENV{'SMTPHOSTS'};
+  elsif (exists $ENV{SMTPHOSTS}) {
+    $host = $ENV{SMTPHOSTS};
   }
   else {
     $host = 'mail';
   }
                                         # optional... override bad choice
-  my $from =  (exists $params{'From'})
-    ? $params{'From'}
-    : ($self->{'login'} . '@' . $self->{'hostname'});
+  my $from =  (exists $params{From})
+    ? $params{From}
+    : ($self->{login} . '@' . $self->{hostname});
 
   my $header = new Mail::Header;
-  $header->add('From'    => $from );
-  $header->add('To'      => $self->{'cddbmail'} );
-  $header->add('Subject' => 'cddb ' . $params{'Genre'} . ' ' . $params{'Id'});
+  $header->add( From    => $from );
+  $header->add( To      => $self->{cddbmail} );
+  $header->add( Subject => 'cddb ' . $params{Genre} . ' ' . $params{Id});
 
   my @message_body =
     ( '# xmcd',
       '#',
       '# Track frame offsets:',
-      map({ "#\t" . $_; } @{$params{'Offsets'}}),
+      map({ "#\t" . $_; } @{$params{Offsets}}),
       '#',
-      '# Disc length: ' . (hex(substr($params{'Id'},2,4))+2) . ' seconds',
+      '# Disc length: ' . (hex(substr($params{Id},2,4))+2) . ' seconds',
       '#',
       '# Revision: 1',
-      '# Submitted via: ' . $self->{'libname'} . ' ' . $self->{'libver'},
+      '# Submitted via: ' . $self->{libname} . ' ' . $self->{libver},
       '#',
-      'DISCID=' . $params{'Id'},
-      'DTITLE=' . $params{'Artist'} . ' / ' . $params{'DiscTitle'},
+      'DISCID=' . $params{Id},
+      'DTITLE=' . $params{Artist} . ' / ' . $params{DiscTitle},
     );
 
   my $number = 0;
-  foreach my $title (@{$params{'TrackTitles'}}) {
+  foreach my $title (@{$params{TrackTitles}}) {
     my $copy = $title;
     while ($copy ne '') {
       push(@message_body, 'TTITLE' . $number . '=' . substr($copy, 0, 69));
@@ -593,8 +615,8 @@ CDDB.pm - a high-level interface to the Internet Compact Disc Database
   use CDDB;
 
   ### connect to the CDDB server
-  my $cddb = new CDDB( Host => 'www.cddb.com',          # default
-                       Port => 8880,                    # default
+  my $cddb = new CDDB( Host  => 'www.cddb.com',         # default
+                       Port  => 8880,                   # default
                        Login => $login_id,              # defaults to %ENV's
                      ) or die $!;
 
@@ -622,21 +644,21 @@ CDDB.pm - a high-level interface to the Internet Compact Disc Database
   ### query disc details (usually done with get_discs() information)
   my $disc_info     = $cddb->get_disc_details($genre, $cddb_id);
   my $disc_time     = $disc_info->{'disc length'};
-  my $disc_id       = $disc_info->{'discid'};
-  my $disc_title    = $disc_info->{'dtitle'};
-  my @track_offsets = @{$disc_info->{'offsets'}};
-  my @track_titles  = @{$disc_info->{'ttitles'}};
+  my $disc_id       = $disc_info->{discid};
+  my $disc_title    = $disc_info->{dtitle};
+  my @track_offsets = @{$disc_info->{offsets}};
+  my @track_titles  = @{$disc_info->{ttitles}};
   # other information may be returned... explore!
 
   ### submit a disc (via e-mail, requires MailTools)
   $cddb->submit_disc
-    ( 'Genre'       => 'classical',
-      'Id'          => 'b811a20c',
-      'Artist'      => 'Various',
-      'DiscTitle'   => 'Cartoon Classics',
-      'Offsets'     => $disc_info->{'offsets'}, # array reference
-      'TrackTitles' => $disc_info->{'ttitles'}, # array reference
-      'From'        => 'login@host.domain.etc', # will try to determine
+    ( Genre       => 'classical',
+      Id          => 'b811a20c',
+      Artist      => 'Various',
+      DiscTitle   => 'Cartoon Classics',
+      Offsets     => $disc_info->{offsets},   # array reference
+      TrackTitles => $disc_info->{ttitles},   # array reference
+      From        => 'login@host.domain.etc', # will try to determine
     );
 
 =head1 DESCRIPTION
@@ -877,8 +899,8 @@ rare), but C<submit_disc(...)> will croak if MailTools are not
 installed.
 
 C<submit_disc(...)> takes six required parameters and two optional
-parameters.  The parameters are in pairs, like C<'Parameter' =>
-$value>, and can appear in any order.  Here goes:
+parameters.  The parameters are in pairs, like C<Parameter => $value>,
+and can appear in any order.  Here goes:
 
 =over 2
 

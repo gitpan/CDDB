@@ -1,4 +1,15 @@
-$Id: HISTORY,v 1.7 1999/08/13 13:17:03 troc Exp $
+$Id: HISTORY,v 1.8 2000/03/27 23:23:29 troc Exp $
+
+
+*** 1.03 2000.03.27
+
+Perl no longer likes defined(@array); tweak, tweak, tweak.
+
+CDDB returns a different code for "Achtung, Baby"; tweak, tweak,
+tweak.
+
+Updated the default hosts with the most recent CDDB protocol sites
+list; tweak, tweak, tweak.
 
 
 *** 1.02 1999.08.13

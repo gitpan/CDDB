@@ -1,6 +1,6 @@
 #!perl -w
-# $Id: cddb.t,v 1.12 1999/08/13 12:47:13 troc Exp $
-# Copyright 1998 Rocco Caputo E<lt>troc@netrus.netE<gt>.  All rights reserved.
+# $Id: cddb.t,v 1.14 2000/04/30 02:06:05 troc Exp $
+# Copyright 1998 Rocco Caputo <troc@netrus.net>.  All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
 
@@ -13,9 +13,9 @@ my ($i, $result);
 
 ### test connecting
 
-my $cddb = new CDDB( Host  => 'www.cddb.com',
+my $cddb = new CDDB( Host  => 'us.cddb.com',
                      Port  => 8880,
-                     Debug => 0
+                     Debug => 0,
                    );
 
 defined($cddb) || print 'not '; print "ok 1\n";
@@ -27,7 +27,7 @@ my @test_genres = qw(blues classical country data folk jazz misc newage
                     );
 my @cddb_genres = $cddb->get_genres();
 
-if (defined @cddb_genres) {
+if (@cddb_genres) {
   print "ok 2\n";
   if (@cddb_genres == @test_genres) {
     print "ok 3\n";
@@ -254,7 +254,7 @@ my @fuzzy_offsets = qw(0 20700 37275 57975 78825 102525 128700 148875 167100
 
 ($genre, $cddb_id, $title) = @{$discs[0]};
 ($genre   eq 'rock')              || print 'not '; print "ok 28\n";
-($cddb_id eq 'ac0cfd0c')          || print 'not '; print "ok 29\n";
+($cddb_id eq 'a90cfd0c')          || print 'not '; print "ok 29\n";
 ($title   eq 'U2 / Achtung Baby') || print 'not '; print "ok 30\n";
 
 
