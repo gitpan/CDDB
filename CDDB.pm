@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.16 1999/07/16 12:28:25 troc Exp $
+# $Id: CDDB.pm,v 1.18 1999/07/16 20:25:44 troc Exp $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -31,7 +31,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = "1.00";
+$VERSION = "1.01";
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
@@ -48,7 +48,7 @@ sub command {
     if ($self->{'debug'});
 
   my $len = length($str .= "\x0D\x0A");
-  
+
   local $SIG{PIPE} = 'IGNORE' unless ($^O eq 'MacOS');
   return 0 unless(syswrite($self->{'handle'}, $str, $len) == $len);
   return 1;
@@ -164,11 +164,13 @@ sub new {
   my %param = @_;
 
   my $hostname = &hostname() || croak "can't get hostname: $!";
-  my $login = $ENV{'LOGNAME'} || $ENV{'USER'} || getpwuid($<) ||
-    croak "can't get login: $!";
+  my $login = $param{Login} || $ENV{'LOGNAME'} || $ENV{'USER'} ||
+    getpwuid($<) || croak "can't get login: $!";
   my $debug = $param{'Debug'} || 0;
   my $host  = $param{'Host'} || '';
   my $port  = $param{'Port'} || 0;
+                                        # Mac Freaks Got Spaces!
+  $login =~ s/\s+/_/g;
 
   my $self = bless
   { 'hostname' => $hostname,
@@ -289,11 +291,11 @@ sub get_genres {
 sub calculate_id {
   my $self = shift;
   my @toc = @_;
-  
+
   my ($seconds_previous, $seconds_first, $seconds_last, $cddb_sum,
       @track_numbers, @track_lengths, @track_offsets,
      );
-  
+
   foreach my $line (@toc) {
     my ($track, $mm_begin, $ss_begin, $ff_begin) = split(/\s+/, $line, 4);
     my $seconds_begin = ($mm_begin * 60) + $ss_begin;
@@ -435,7 +437,7 @@ sub get_disc_details {
     warn 'error reading track file';
     return undef;
   }
-  
+
   my @track_file = @$track_file;
   my %details = ( offsets => [ ] );
   my $state = 'beginning';
@@ -509,7 +511,7 @@ sub submit_disc {
     croak "submit_disc needs Mail::Internet and Mail::Header, which appear " .
           "not to be installed";
   }
-  
+
   (exists $params{'Genre'})       or croak "submit_disc needs a Genre";
   (exists $params{'Id'})          or croak "submit_disc needs an Id";
   (exists $params{'Artist'})      or croak "submit_disc needs an Artist";
@@ -593,6 +595,7 @@ CDDB.pm - a high-level interface to the Internet Compact Disc Database
   ### connect to the CDDB server
   my $cddb = new CDDB( Host => 'www.cddb.com',          # default
                        Port => 8880,                    # default
+                       Login => $login_id,              # defaults to %ENV's
                      ) or die $!;
 
   ### retrieve known genres
@@ -658,7 +661,8 @@ protocol may require several separate connections (sometimes one per
 query).
 
 C<new> accepts these parameters: Host (defaults to www.cddb.com), Port
-(defaults to 8880) and Debug (defaults to boolean false) parameters.
+(defaults to 8880), Login (defaults to your login ID), and Debug
+(defaults to boolean false) parameters.
 
 =item C<get_genres()>
 

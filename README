@@ -1,4 +1,4 @@
-$Id: README,v 1.8 1999/01/10 16:51:52 troc Exp $
+$Id: README,v 1.9 1999/07/16 20:24:48 troc Exp $
 
 ABOUT:
 
@@ -12,6 +12,7 @@ TO DO (in no particular order, and with no particular time frame):
 * DWIM interface (accept all manner of free-form input, and do
   whatever possible)
 
+
 COMPATIBILITY:
 
 CDDB.pm uses standard Perl modules.  It has been tested on OS/2, MacOS
@@ -20,6 +21,7 @@ and FreeBSD systems, as well as the systems listed at
 
 If you want to submit disc information to the CDDB, you will need to
 install MailTools.  All other features will work without MailTools.
+
 
 GETTING STARTED:
 
@@ -31,12 +33,16 @@ To build and test this distribution, type:
 The final test will try to send a sample submission to the CDDB if
 MailTools is present.  It expects to find an SMTP host in the SMTPHOST
 environment variable.  It will fall back to "mail" if SMTPHOST doesn't
-exist.  If neither works, the test will fail.  "make test VERBOSE=1"
-will show why it fails.
+exist.  If neither works, the test will be skipped.  To see why it's
+skipped:
 
-At any rate, the last test usually is harmless.  If you aren't
-planning to submit information to the CDDB, you can ignore its
-failure.
+  make test VERBOSE=1
+
+Some of the tests (most notably #25) compare data returned by a CDDB
+server against a stored copy of a previous query.  These tests fail
+occasionally since the database is constantly changing.  Starting with
+version 1.00, the test program uses fuzzy comparisons that should fail
+less.  Please let me know if there are any problems.
 
 If you're satisfied with the test results:
 

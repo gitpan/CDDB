@@ -1,4 +1,13 @@
-$Id: HISTORY,v 1.4 1999/07/16 12:26:20 troc Exp $
+$Id: HISTORY,v 1.5 1999/07/16 20:26:56 troc Exp $
+
+*** 1.01 1999.07.16
+
+Just as I was getting ready to celebrate a bug-free CDDB module, along
+comes some Macintosh freak with spaces in his login ID (Hi, Schwern!).
+So now the module squashes spaces and replaces them with underscores.
+And if that isn't enough, CDDB's constructor now accepts an optional
+Login parameter.
+
 
 *** 1.00 1999.07.16
 
