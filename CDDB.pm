@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.13';
+$VERSION = '1.14';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -708,21 +708,20 @@ sub get_disc_details {
   }
 
   # Parse that puppy.
-
-  return parse_xmcd_file(@$track_file);
+  return parse_xmcd_file($track_file, $genre);
 }
 
 # Arf!
 
 sub parse_xmcd_file {
-  my @track_file = @_;
+  my ($track_file, $genre) = @_;
 
   my %details = (
     offsets => [ ],
     seconds => [ ],
   );
   my $state = 'beginning';
-  foreach my $line (@track_file) {
+  foreach my $line (@$track_file) {
     # Keep returned so-called xmcd record...
     $details{xmcd_record} .= $line . "\n";
 
@@ -801,6 +800,9 @@ sub parse_xmcd_file {
     @{$details{seconds}},
     $disc_length - int($details{offsets}->[-1] / 75) + 1 - $first_start
   );
+
+  # Add the genre, if we have it.
+  $details{genre} = $genre;
 
   return \%details;
 }
@@ -1350,10 +1352,16 @@ $disc_details->{xmcd_record}
 The xmcd_record field contains a copy of the entire unprocessed cddbp
 response that generated all the other fields.
 
-=item parse_xmcd_file XMCD_FILE_CONTENTS
+$disc_details->{genre}
 
-Parses an array of lines read from an XMCD file into the disc_details
-hash described above.
+This is merely a copy of DISC_GENRE, since it's otherwise not possible
+to determine it from the hash.
+
+=item parse_xmcd_file XMCD_FILE_CONTENTS, [GENRE]
+
+Parses an array ref of lines read from an XMCD file into the
+disc_details hash described above.  If the GENRE parameter is set it
+will be included in disc_details.
 
 =item can_submit_disc
 
