@@ -1,13 +1,13 @@
-$Id: README,v 1.4 1998/10/24 02:48:27 troc Exp $
+$Id: README,v 1.6 1998/11/07 19:09:28 troc Exp $
 
 ABOUT:
 
 CDDB is a high-level interface to the Compact Disc Database at
-<www.cddb.com>.  This code is in its late beta stage.  Interface
-development has quieted down, but it still may change before its CPAN
-release.
+<www.cddb.com>.  This code is in its late beta stage.  The interface
+is gelling, and should remain backward compatible unless something
+hideously wrong is found with it.
 
-TO DO :
+TO DO (in no particular order):
 
 * gracefully handle the "too many connections today" close message
 * LWP interface to www.cddb.com's search form
@@ -17,15 +17,11 @@ TO DO :
 COMPATIBILITY:
 
 CDDB.pm uses standard Perl modules.  It has been tested on OS/2, MacOS
-and FreeBSD systems.
+and FreeBSD systems, as well as the systems listed at
+<http://www.connect.net/gbarr/cpan-test/by-dist/CDDB.html>.
 
 If you want to submit disc information to the CDDB, you will need to
 install MailTools.  All other features will work without MailTools.
-
-AVAILABILITY:
-
-Currently it is available only from the author.  The author ventures
-to guess that version 0.06 will be uploaded to PAUSE.
 
 GETTING STARTED:
 

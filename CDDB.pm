@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.10 1998/10/24 02:56:14 troc Exp $
+# $Id: CDDB.pm,v 1.11 1998/11/07 17:25:34 troc Exp $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -22,7 +22,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = "0.05-beta";
+$VERSION = "0.06-beta";
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
@@ -511,7 +511,7 @@ sub submit_disc {
   push @message_body, map { "EXTT$_="; } (0..--$number);
   push @message_body, 'PLAYORDER=';
 
-  map { $_ .= "\x0D\x0A"; } @message_body;
+  map { $_ .= "\n"; } @message_body;
 
   my $mail = new Mail::Internet
     ( undef,

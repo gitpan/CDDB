@@ -1,0 +1,8 @@
+$Id: HISTORY,v 1.1 1998/11/07 18:58:12 troc Exp $
+
+*** 0.06-beta:
+
+BUGFIX: fixed newlines in submit_disc so they meet Net::Cmd
+expectations
+
+ADDITION: the HISTORY file, to track changes :)
