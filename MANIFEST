@@ -1,0 +1,6 @@
+# $Id: MANIFEST,v 1.1 1998/10/08 18:42:44 troc Exp $
+CDDB.pm
+MANIFEST
+Makefile.PL
+README
+t/cddb.t

@@ -1,0 +1,41 @@
+$Id: README,v 1.4 1998/10/24 02:48:27 troc Exp $
+
+ABOUT:
+
+CDDB is a high-level interface to the Compact Disc Database at
+<www.cddb.com>.  This code is in its late beta stage.  Interface
+development has quieted down, but it still may change before its CPAN
+release.
+
+TO DO :
+
+* gracefully handle the "too many connections today" close message
+* LWP interface to www.cddb.com's search form
+* DWIM interface (accept all manner of freeform input, and do whatever
+  possible)
+
+COMPATIBILITY:
+
+CDDB.pm uses standard Perl modules.  It has been tested on OS/2, MacOS
+and FreeBSD systems.
+
+If you want to submit disc information to the CDDB, you will need to
+install MailTools.  All other features will work without MailTools.
+
+AVAILABILITY:
+
+Currently it is available only from the author.  The author ventures
+to guess that version 0.06 will be uploaded to PAUSE.
+
+GETTING STARTED:
+
+To build and test this distribution, type:
+
+  perl Makefile.PL
+  make test
+
+If the tests pass, install it:
+
+  make install
+
+-- Rocco Caputo / troc@netrus.net
