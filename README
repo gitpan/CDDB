@@ -1,41 +1,62 @@
-NAME
+$Id: README,v 1.11 2001/03/25 03:48:52 troc Exp $
 
-  CDDB - Read the CDDB entry for an audio CD in your drive
+-----
+ABOUT
+-----
 
-DESCRIPTION
+CDDB is a high-level interface to databases based on the Compact Disc
+Database protocol.
 
-  This module/script gets the CDDB info for an audio cd. You need
-  LINUX, a cdrom drive and an active internet connection in order
-  to do that.
+Starting in version 1.04, CDDB.pm will contact freedb.org servers by
+default.  This change is in response to cddb.com denying CDDB.pm
+connections.
 
-LICENSE & DISCLAIMER
+cddb.com's developer license is for end-user applications; not
+third-party libraries.  This makes CDDB.pm ineligible for access to
+cddb.com servers.  This author will not pursue further cddb.com
+access.
 
-  This library is released under the same conditions as Perl, that
-  is, either of the following:
+Developers using CDDB.pm may continue to attempt connections to
+cddb.com servers, but there are no guarantees.
 
-  a) the GNU General Public License as published by the Free
-  Software Foundation; either version 1, or (at your option) any
-  later version.
+-------------
+COMPATIBILITY
+-------------
 
-  b) the Artistic License.
+CDDB.pm uses standard Perl modules.  It has been tested on OS/2, MacOS
+and FreeBSD systems, as well as the systems listed at:
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
-  the GNU General Public License or the Artistic License for more details.
+http://testers.cpan.org/search?request=dist&dist=CDDB
 
-  You should have received a copy of the Artistic License with this
-  Kit, in the file named "Artistic".  If not, I'll be glad to provide one.
+If you want to submit disc information to the CDDB, you will need to
+install MailTools.  All other features will work without them.
 
-  You should also have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software Foundation,
-  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+---------------
+GETTING STARTED
+---------------
 
-  If you use this library in a commercial enterprise, you are invited,
-  but not required, to pay what you feel is a reasonable fee to the
-  author, who can be contacted at armin@xos.net
+To build and test this distribution, type:
 
-AUTHOR & COPYRIGHT
+  perl Makefile.PL
+  make test
 
-  (c) 2000 Armin Obersteiner <armin@xos.net>
+The final test will try to send a sample submission to the CDDB if
+MailTools is present.  It expects to find an SMTP host in the SMTPHOST
+environment variable.  It will fall back to "mail" if SMTPHOST doesn't
+exist.  If neither works, the test will be skipped.  To see why it's
+skipped:
 
+  make test VERBOSE=1
+
+Some of the tests (most notably numbers 25, 27 and 29) compare data
+returned by a CDDB server against a stored copy of a previous query.
+These tests fail occasionally since the database is constantly in
+flux.  Starting with version 1.00, the test program uses fuzzy
+comparisons that should fail less.  Version 1.04 saw even fuzzier
+comparisons.  Please let me know if there are any problems.
+
+If you're satisfied with the test results:
+
+  make install
+
+-- Rocco Caputo / troc@netrus.net

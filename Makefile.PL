@@ -1,8 +1,14 @@
+#!/usr/bin/perl
+# $Id: Makefile.PL,v 1.3 2001/03/25 03:48:15 troc Exp $
+
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    'NAME'	=> 'CDDB',
-    'VERSION_FROM' => 'CDDB.pm', # finds $VERSION
-    'EXE_FILES' => ['cddb.pl'],
-);
+
+WriteMakefile
+  ( NAME         => 'CDDB',
+    AUTHOR       => 'Rocco Caputo <troc+cddb@netrus.net>',
+    ABSTRACT     => 'High-level object interface to CDDB/FreeDB servers.',
+    VERSION_FROM => 'CDDB.pm',
+    dist         => { COMPRESS => 'gzip -9',
+                      SUFFIX   => 'gz',
+                    },
+  );
