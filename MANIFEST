@@ -1,7 +1,8 @@
-# $Id: MANIFEST,v 1.2 1998/11/07 18:58:44 troc Exp $
+Artistic
+Copying
 CDDB.pm
-HISTORY
+cddb.pl
+Changes
 MANIFEST
-Makefile.PL
 README
-t/cddb.t
+Makefile.PL
