@@ -7,7 +7,10 @@
 use strict;
 use CDDB;
 
-BEGIN { select(STDOUT); $|=1; print "1..32\n"; };
+BEGIN {
+  select(STDOUT); $|=1;
+  print "1..32\n";
+};
 
 my ($i, $result);
 
@@ -15,8 +18,8 @@ my ($i, $result);
 
 my $cddb = new CDDB( Host           => 'freedb.freedb.org',
                      Port           => 8880,
-                     Debug          => 0,
                      Submit_Address => 'test-submit@freedb.org',
+                     Debug          => 0,
                    );
 
 defined($cddb) || print 'not '; print "ok 1\n";
@@ -279,16 +282,22 @@ else {
 if ($cddb->can_submit_disc()) {
   eval {
     $cddb->submit_disc
-      ( 'Genre'       => 'classical',
-        'Id'          => 'b811a20c',
-        'Artist'      => 'Various',
-        'DiscTitle'   => 'Cartoon Classics',
-        'Offsets'     => $disc_info->{'offsets'},
-        'TrackTitles' => $disc_info->{'ttitles'},
+      ( Genre       => 'classical',
+        Id          => 'b811a20c',
+
+        # iso-8859-1 u with diaeresis (umlaut) for testing
+        Artist      => "Vario\xDCs",
+        DiscTitle   => 'Cartoon Classics',
+        Offsets     => $disc_info->{'offsets'},
+        TrackTitles => $disc_info->{'ttitles'},
+
+        # odd revision for testing
+        Revision    => 123,
       );
     print "ok 32\n";
   };
-                                        # skip if SMTPHOSTS and default are bad
+
+  # skip if SMTPHOSTS and default are bad
   if ($@ ne '') {
     print "ok 32 # Skip - $@\n";
   }
@@ -299,10 +308,12 @@ if ($cddb->can_submit_disc()) {
 
                                         # skip when needed modules are missing
 else {
-  print "ok 32 # Skip - Mail::Internet & Mail::Header needed to submit disc\n";
+  print( "ok 32 # Skip - Mail::Internet; Mail::Header; and MIME::QuotedPrint ",
+         "are needed to submit discs\n"
+       );
 }
 
-__END__ 
+__END__
 
 sub developing {
                                         # CD-ROM interface
