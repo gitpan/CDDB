@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.14';
+$VERSION = '1.15';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -497,7 +497,8 @@ sub calculate_id {
 
   foreach my $line (@toc) {
     my ($track, $mm_begin, $ss_begin, $ff_begin) = split(/\s+/, $line, 4);
-    my $seconds_begin = ($mm_begin * 60) + $ss_begin;
+    my $frame_offset = (($mm_begin * 60 + $ss_begin) * 75) + $ff_begin + 150;
+    my $seconds_begin = int($frame_offset / 75);
 
     if (defined $seconds_previous) {
       my $elapsed = $seconds_begin - $seconds_previous;
@@ -523,17 +524,16 @@ sub calculate_id {
     }
 
     map { $cddbp_sum += $_; } split(//, $seconds_begin);
-    push @track_offsets, ($mm_begin * 60 + $ss_begin) * 75 + $ff_begin;
+    push @track_offsets, $frame_offset;
     push @track_numbers, sprintf("%03d", $track);
     $seconds_previous = $seconds_begin;
   }
 
   # Calculate the ID.  Whee!
-  my $total_seconds = $seconds_last - $seconds_first;
   my $id = sprintf(
     "%08x",
     (($cddbp_sum % 255) << 24)
-    | ($total_seconds << 8)
+    | (($seconds_last - $seconds_first) << 8)
     | scalar(@track_offsets)
   );
 
@@ -541,7 +541,7 @@ sub calculate_id {
   # useful for generating filenames or playlists (the padded track
   # numbers).  Others are needed for cddbp queries.
   return (
-    $id, \@track_numbers, \@track_lengths, \@track_offsets, $total_seconds
+    $id, \@track_numbers, \@track_lengths, \@track_offsets, $seconds_last
   ) if wantarray();
 
   # Just return the cddbp ID in scalar context.

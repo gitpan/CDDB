@@ -79,19 +79,8 @@ sub not_near {
 # Sample TOC information:
 
 my @toc = (
-  "1   0  2  37",  # track  1 starts at 00:02 and 37 frames
-  "2   1  38 17",  # track  2 starts at 01:38 and 17 frames
-  "3   11 57 30",  # track  3 starts at 11:57 and 30 frames
-  "4   16 26 25",  # track  4 starts at 16:26 and 25 frames
-  "5   18 48 7",   # track  5 starts at 18:48 and 7  frames
-  "6   23 46 42",  # track  6 starts at 23:46 and 42 frames
-  "7   35 15 20",  # track  7 starts at 35:15 and 20 frames
-  "8   39 18 12",  # track  8 starts at 39:18 and 12 frames
-  "9   48 38 47",  # track  9 starts at 48:38 and 47 frames
-  "10  51 45 7",   # track 10 starts at 51:45 and 7  frames
-  "11  61 6  32",  # track 11 starts at 61:06 and 32 frames
-  "12  66 34 30",  # track 12 starts at 66:34 and 30 frames
-  "999 75 16 5",   # leadout  starts at 75:15 and 5  frames
+  "1   0  1  71",  # track  1 starts at 00:01 and 71 frames
+  "999 5 42   4",  # leadout  starts at 05:42 and  4 frames
 );
 
 ### calculate CDDB ID
@@ -99,18 +88,12 @@ my @toc = (
 my ($id, $track_numbers, $track_lengths, $track_offsets, $total_seconds) =
   $cddb->calculate_id(@toc);
 
-($id ne 'b811a20c') && print 'not '; print "ok 5\n";
-&not_near($total_seconds, 4514) && print 'not '; print "ok 6\n";
+($id ne '03015501') && print 'not '; print "ok 5\n";
+&not_near($total_seconds, 344) && print 'not '; print "ok 6\n";
 
-my @test_numbers = qw(001 002 003 004 005 006 007 008 009 010 011 012);
-my @test_lengths = qw(
-  01:36 10:19 04:29 02:22 04:58 11:29
-  04:03 09:20 03:07 09:21 05:28 08:42
-);
-my @test_offsets = qw(
-  187 7367 53805 73975 84607 106992 158645 176862
-  218897 232882 274982 299580
-);
+my @test_numbers = qw(001);
+my @test_lengths = qw(05:41);
+my @test_offsets = qw(296);
 
 if (@$track_numbers == @test_numbers) {
   print "ok 7\n";
@@ -158,10 +141,10 @@ my @discs = $cddb->get_discs($id, $track_offsets, $total_seconds);
 (@discs == 1) || print 'not '; print "ok 13\n";
 
 my ($genre, $cddb_id, $title) = @{$discs[0]};
-($genre   eq 'classical') || print 'not '; print "ok 14\n";
-($cddb_id eq 'b811a20c')  || print 'not '; print "ok 15\n";
+($genre   eq 'misc')      || print 'not '; print "ok 14\n";
+($cddb_id eq '03015501')  || print 'not '; print "ok 15\n";
 
-print 'not ' unless $title =~ /Cartoon\s*Classics/i;
+print 'not ' unless $title =~ / freedb disc ID test/i;
 print "ok 16 # $title\n";
 
 ### test macro lookup
@@ -197,7 +180,7 @@ my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
 #   }
 # }
 
-($disc_info->{'disc length'} eq '4516 seconds') || print 'not ';
+($disc_info->{'disc length'} eq '344 seconds') || print 'not ';
 print "ok 21 # $disc_info->{'disc length'}\n";
 
 ($disc_info->{'discid'} eq $cddb_id) || print 'not ';
@@ -219,51 +202,14 @@ else {
   print "not ok 25\n";
 }
 
-my @test_titles = (
-  "Comedian's Gallop / Kabalevsky",
-  "Dance of the Hours / Ponchielli",
-  "The Sleeping Beauty Waltz / Tchaikovsky",
-  "The Barber of Seville: Overture-Conclusion / Rossini",
-  "The Barber of Seville: Largo al Factotum / Rossini",
-  "The Sorcerer's Apprentice / Dukas",
-  "Tannhauser: Pilgrim's Chorus / Wagner",
-  "Toccata and Fugue in D Minor, BWV 565 / Bach",
-  "William Tell: Overture-Conclusion / Rossini",
-  "Morning, Noon and Night in Vienna: Overture / Suppe",
-  "Ride of the Valkyries / Wagner",
-  "Hungarian Rhapsody No. 2 / Liszt"
-);
-
-# Augh! Someone borked this disc's record, killing the title for
-# Wagner's track!  We will accept this test if at least half the
-# tracks are ok.
-
-sub detail_is_ok {
-  my ($detail_norm, $test_norm) = @_;
-
-  # quick normalization for approx match
-  $detail_norm =~ tr[aeiouy][]d;
-  $detail_norm =~ tr[a-z ][]cd;
-  $detail_norm =~ s/\s+/ /g;
-  $test_norm =~ tr[aeiouy][]d;
-  $test_norm =~ tr[a-z ][]cd;
-  $test_norm =~ s/\s+/ /g;
-
-  my $mismatches = 0;
-  foreach my $detail_word (split ' ', $detail_norm) {
-    $mismatches++ unless $test_norm =~ $detail_word;
-  }
-
-  return if $mismatches;
-  return 1;
-}
+my @test_titles = ( "5:40:00" );
 
 my $ok_tracks = 0;
 $i = 0; $result = 'ok';
 foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
   my ($detail_norm, $test_norm) = (lc($detail_title), lc($test_titles[$i++]));
 
-  next unless detail_is_ok($detail_norm, $test_norm);
+  next unless $detail_norm eq $test_norm;
   $ok_tracks++;
 }
 

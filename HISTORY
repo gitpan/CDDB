@@ -1,6 +1,12 @@
 $Id: HISTORY,v 1.10 2001/05/03 20:31:05 troc Exp troc $
 
-*** 1.13 2004-09-01
+*** 1.15 2004-09-08
+
+Tilman Sauerbeck updated the ID calculations to work with FreeDB's
+reference CD.  Previously they were slightly off, but the protocol's
+fuzzy matching had been compensating.
+
+*** 1.14 2004-09-01
 
 Applied Steve James' patch to improve dead connection detection.  It
 prevents harmless yet annoying warnings.
