@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: cddb.t,v 1.8 1998/10/24 02:56:33 troc Exp $
+# $Id: cddb.t,v 1.10 1999/01/10 16:37:46 troc Exp $
 # Copyright 1998 Rocco Caputo E<lt>troc@netrus.netE<gt>.  All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -7,8 +7,7 @@
 use strict;
 use CDDB;
 
-BEGIN { select(STDOUT); $|=1; print "1..29\n";
-      }
+BEGIN { select(STDOUT); $|=1; print "1..32\n"; };
 
 my ($i, $result);
 
@@ -147,6 +146,16 @@ my ($genre, $cddb_id, $title) = @{$discs[0]};
 ($cddb_id eq 'b811a20c')                   || print 'not '; print "ok 15\n";
 ($title   eq 'Various / Cartoon Classics') || print 'not '; print "ok 16\n";
 
+### test macro lookup
+
+my @other_discs = $cddb->get_discs_by_toc(@toc);
+
+(@other_discs == 1) || print 'not '; print "ok 17\n";
+($other_discs[0]->[0] eq $discs[0]->[0]) || print 'not '; print "ok 18\n";
+($other_discs[0]->[1] eq $discs[0]->[1]) || print 'not '; print "ok 19\n";
+($other_discs[0]->[2] eq $discs[0]->[2]) || print 'not '; print "ok 20\n";
+
+
 ### test gathering disc details
 
 my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
@@ -163,25 +172,25 @@ my $disc_info = $cddb->get_disc_details($genre, $cddb_id);
 # }
 
 ($disc_info->{'disc length'} eq '4516 seconds') || print 'not ';
-print "ok 17\n";
+print "ok 21\n";
 
 ($disc_info->{'discid'} eq $cddb_id) || print 'not ';
-print "ok 18\n";
+print "ok 22\n";
 
 ($disc_info->{'dtitle'} eq $title) || print 'not ';
-print "ok 19\n";
+print "ok 23\n";
 
 if (@{$disc_info->{'offsets'}} == @$track_offsets) {
-  print "ok 20\n";
+  print "ok 24\n";
   $i = 0; $result = 'ok';
   foreach my $offset (@{$disc_info->{'offsets'}}) {
     $result = 'not ok' if ($track_offsets->[$i++] != $offset);
   }
-  print "$result 21\n";
+  print "$result 25\n";
 }
 else {
-  print "not ok 20\n";
-  print "not ok 21\n";
+  print "not ok 24\n";
+  print "not ok 25\n";
 }
 
 my @test_titles = ( "Comedian's Gallop / Kabalevsky",
@@ -202,7 +211,7 @@ $i = 0; $result = 'ok';
 foreach my $detail_title (@{$disc_info->{'ttitles'}}) {
   $result = 'not ok' if ($detail_title ne $test_titles[$i++]);
 }
-print "$result 22\n";
+print "$result 26\n";
 
 ### test fuzzy matches ("the freeside tests")
 
@@ -213,12 +222,12 @@ my @fuzzy_offsets = qw(0 20700 37275 57975 78825 102525 128700 148875 167100
                       );
 
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
-(@discs == 1) || print 'not '; print "ok 23\n";
+(@discs == 1) || print 'not '; print "ok 27\n";
 
 ($genre, $cddb_id, $title) = @{$discs[0]};
-($genre   eq 'rock')              || print 'not '; print "ok 24\n";
-($cddb_id eq 'ac0cfd0c')          || print 'not '; print "ok 25\n";
-($title   eq 'U2 / Achtung Baby') || print 'not '; print "ok 26\n";
+($genre   eq 'rock')              || print 'not '; print "ok 28\n";
+($cddb_id eq 'ac0cfd0c')          || print 'not '; print "ok 29\n";
+($title   eq 'U2 / Achtung Baby') || print 'not '; print "ok 30\n";
 
 
 $id = 'c509b810';
@@ -227,53 +236,40 @@ $total_seconds = 2488;
                     120225 142425 152325 163200 167850 182775
                    );
 
-my @test_discs = 
-  ( [ 'misc', 'c609bf10', 'Different Artists / Pulp Fiction' ],
-    [ 'rock', 'c609bf10', 'Various / Music From The Motion Picture Pulp Fiction'],
-    [ 'soundtrack', 'cc09bf10', 'Pulp Fiction / Music from the Motion Picture' ],
-    [ 'misc', 'bf09be10', 'Varies / Music From The Motion Picture PULP FICTION' ],
-    [ 'soundtrack', 'bf09be10', 'Pulp Fiction Soundtrack / Pulp Fiction Soundtrack' ],
-    [ 'soundtrack', 'ca09bf10', 'Quentin Tarantino / Pulp Fiction' ],
-    [ 'soundtrack', 'c309bf10', 'Original Soundtrack / Pulp Fiction' ],
-    [ 'misc', 'c009c010', 'Various / Pulp Fiction Soundtrack' ],
-    [ 'soundtrack', 'bf09c010', 'Pulp Fiction Soundtrack' ]
-  );
-
 @discs = $cddb->get_discs($id, \@fuzzy_offsets, $total_seconds);
 
-if (@discs == @test_discs) {
-  print "ok 27\n";
-  $result = 'ok';
-  foreach my $disc (@discs) {
-    ($genre, $cddb_id, $title) = @$disc;
-    my ($test_genre, $test_id, $test_title) = @{shift(@test_discs)};
-    ( ($test_genre ne $genre) ||
-      ($test_id ne $cddb_id) ||
-      ($test_title ne $title)
-    ) && ($result = 'not ok');
-  }  
-  print "$result 28\n";
+if (@discs > 1) {
+  print "ok 31\n";
 }
 else {
-  print "not ok 27\n";
-  print "not ok 28\n";
+  print "not ok 31\n";
 }
 
 ### test CDDB submission
 
-eval {
-  $cddb->submit_disc
-    ( 'Genre'       => 'classical',
-      'Id'          => 'b811a20c',
-      'Artist'      => 'Various',
-      'DiscTitle'   => 'Cartoon Classics',
-      'Offsets'     => $disc_info->{'offsets'},
-      'TrackTitles' => $disc_info->{'ttitles'},
-    );
-  print "ok 29\n";
-};
-if ($@ ne '') {
-  print "not ok 29 ($@)\n";
+if ($cddb->can_submit_disc()) {
+  eval {
+    $cddb->submit_disc
+      ( 'Genre'       => 'classical',
+        'Id'          => 'b811a20c',
+        'Artist'      => 'Various',
+        'DiscTitle'   => 'Cartoon Classics',
+        'Offsets'     => $disc_info->{'offsets'},
+        'TrackTitles' => $disc_info->{'ttitles'},
+      );
+    print "ok 32\n";
+  };
+  if ($@ ne '') {
+    print "not ok 32 ($@)\n";
+  }
+}
+
+# <bekj> dngor It's not Polite to have tests fail when things are OK,
+# Makes CPAN choke :(
+
+                                        # make "ok" when submit can't be tested
+else {
+  print "ok 32\n";
 }
 
 __END__ 

@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.11 1998/11/07 17:25:34 troc Exp $
+# $Id: CDDB.pm,v 1.14 1999/01/10 16:52:23 troc Exp $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -12,6 +12,15 @@ use IO::Socket;
 use Sys::Hostname;
 
 #------------------------------------------------------------------------------
+# list of known cddb servers
+
+my @cddb_hosts =
+  ( [ 'us.cddb.com',    8880 ],
+    [ 'in.us.cddb.com', 8880 ],
+    [ 'ca.us.cddb.com', 8880 ],
+  );
+
+#------------------------------------------------------------------------------
 
 my $imported_mail = 0;
 eval {
@@ -22,7 +31,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = "0.06-beta";
+$VERSION = "0.07";
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
@@ -102,6 +111,13 @@ sub response {
 
 #------------------------------------------------------------------------------
 
+sub message {
+  my $self = shift;
+  $self->{'response text'};
+}
+
+#------------------------------------------------------------------------------
+
 sub debug_print {
   my $self = shift;
   my $level = shift;
@@ -151,8 +167,8 @@ sub new {
   my $login = $ENV{'LOGNAME'} || $ENV{'USER'} || getpwuid($<) ||
     croak "can't get login: $!";
   my $debug = $param{'Debug'} || 0;
-  my $host  = $param{'Host'}  || 'www.cddb.com';
-  my $port  = $param{'Port'}  || 8880;
+  my $host  = $param{'Host'} || '';
+  my $port  = $param{'Port'} || 0;
 
   my $self = bless
   { 'hostname' => $hostname,
@@ -190,20 +206,35 @@ sub disconnect {
 
 sub connect {
   my $self = shift;
+                                        # try each possible host, in order
+HOST:
+  while ('true') {
+    $self->disconnect()
+      if (exists $self->{'handle'});
+                                        # cycle to next host
+    if ($self->{'host'} eq '') {
+      my $cddb_host = shift(@cddb_hosts);
+      die "ran out of CDDB hosts to query today\n"
+        unless ($cddb_host);
+      ($self->{'host'}, $self->{'port'}) = @$cddb_host;
+      warn "trying $self->{host}:$self->{port}...\n";
+    }
 
-  $self->disconnect()
-    if (exists $self->{'handle'});
-
-  $self->{'handle'} = new IO::Socket::INET( 'PeerAddr' => $self->{host},
-                                            'PeerPort' => $self->{port},
-                                            'Proto'    => 'tcp',
-                                            'Timeout'  => 15,
-                                          );
-  unless (defined $self->{'handle'}) {
-    delete $self->{'handle'};
-    carp "could not connect to $self->{host} $self->{port}: $!";
-    return undef;
+    $self->{'handle'} = new IO::Socket::INET( 'PeerAddr' => $self->{host},
+                                              'PeerPort' => $self->{port},
+                                              'Proto'    => 'tcp',
+                                              'Timeout'  => 15,
+                                            );
+    unless (defined $self->{'handle'}) {
+      warn "could not connect to $self->{host} $self->{port}: $!\n";
+      push(@cddb_hosts, [ $self->{host}, $self->{port} ]);
+      delete $self->{'handle'};
+      $self->{host} = $self->{port} = '';
+      next HOST;
+    }
+    last HOST;
   }
+
   select((select($self->{'handle'}), $|=1)[0]);
 
   my $code = $self->response();
@@ -328,10 +359,18 @@ sub get_discs {
   }
 
   my ($code, $flag, @matches);
+                                        # attempt to query over and over
+ATTEMPT:
+  while ('true') {
+    $self->command('cddb query', $id, $track_count,
+                   $offsets_string, $total_seconds);
+    $code = $self->response();
+    if ($self->code() == 417) {
+      next ATTEMPT;
+    }
+    last ATTEMPT;
+  }
 
-  $self->command('cddb query', $id, $track_count,
-                 $offsets_string, $total_seconds);
-  $code = $self->response();
   if ($code != 2) {
     return undef;
   }
@@ -342,7 +381,7 @@ sub get_discs {
     push(@matches, [ $genre, $cddb_id, $title ]);
   }
   elsif ($self->code() == 202) {
-    # -><- no matches!
+    @matches = ();
   }
   elsif ($self->code() == 211) {
     my $discs = $self->read_until_dot();
@@ -359,6 +398,17 @@ sub get_discs {
   }
 
   @matches;
+}
+
+#------------------------------------------------------------------------------
+
+sub get_discs_by_toc {
+  my $self = shift;
+  my (@info, @discs);
+  if (defined(@info = $self->calculate_id(@_))) {
+    @discs = $self->get_discs(@info[0, 3, 4]);
+  }
+  @discs;
 }
 
 #------------------------------------------------------------------------------
@@ -445,6 +495,11 @@ sub get_disc_details {
 }
 
 #------------------------------------------------------------------------------
+
+sub can_submit_disc {
+  my $self = shift;
+  $imported_mail;
+}
 
 sub submit_disc {
   my $self = shift;
@@ -717,7 +772,8 @@ C<calculate_id(...)>.
 =back
 
 C<get_discs(...)> returns an array of matching discs, each of which is
-represented by an array reference.
+represented by an array reference.  It returns an empty array if the
+query succeeded but did not match.  It returns undef on error.
 
 Each disc record contains three elements, two of which can be used
 later on:
@@ -739,6 +795,12 @@ C<get_discs(...)> due to fuzzy matching.
 The title of this disc.
 
 =back
+
+=item C<get_discs_by_toc(...)>
+
+This function combines C<calculate_id(...)> and C<get_discs(...)> into
+one step.  It takes the same parameters as C<calculate_id(...)>, and
+it returns the same information as C<get_discs(...)>.
 
 =item C<get_disc_details(...)>
 
@@ -793,6 +855,13 @@ that are submitted by broken software so they can be purged or
 corrected.
 
 =back
+
+=item C<can_submit_disc()>
+
+Returns boolean true or false.  If true, CDDB.pm was able to import
+the MailTools it needs to send submissions.  If false, it didn't, and
+you'll need to install at least Mail::Internet and Mail::Header (and
+the underlying Net::SMTP, etc.).
 
 =item C<submit_disc(...)>
 

@@ -1,18 +1,16 @@
-$Id: README,v 1.6 1998/11/07 19:09:28 troc Exp $
+$Id: README,v 1.8 1999/01/10 16:51:52 troc Exp $
 
 ABOUT:
 
 CDDB is a high-level interface to the Compact Disc Database at
-<www.cddb.com>.  This code is in its late beta stage.  The interface
-is gelling, and should remain backward compatible unless something
-hideously wrong is found with it.
+<www.cddb.com>.  The interface is stable, and this code is officially
+out of beta.
 
-TO DO (in no particular order):
+TO DO (in no particular order, and with no particular time frame):
 
-* gracefully handle the "too many connections today" close message
 * LWP interface to www.cddb.com's search form
-* DWIM interface (accept all manner of freeform input, and do whatever
-  possible)
+* DWIM interface (accept all manner of free-form input, and do
+  whatever possible)
 
 COMPATIBILITY:
 
@@ -30,7 +28,17 @@ To build and test this distribution, type:
   perl Makefile.PL
   make test
 
-If the tests pass, install it:
+The final test will try to send a sample submission to the CDDB if
+MailTools is present.  It expects to find an SMTP host in the SMTPHOST
+environment variable.  It will fall back to "mail" if SMTPHOST doesn't
+exist.  If neither works, the test will fail.  "make test VERBOSE=1"
+will show why it fails.
+
+At any rate, the last test usually is harmless.  If you aren't
+planning to submit information to the CDDB, you can ignore its
+failure.
+
+If you're satisfied with the test results:
 
   make install
 
