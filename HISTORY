@@ -1,4 +1,10 @@
-$Id: HISTORY,v 1.9 2001/03/25 03:48:44 troc Exp $
+$Id: HISTORY,v 1.9 2001/03/25 03:48:44 troc Exp troc $
+
+*** 1.05 2001.05.03
+
+Christoph Lorenz pointed out that the module is noisy even when
+debugging is turned off.  I made sure that all the carp calls are
+behind debuging checks.
 
 *** 1.04 2001.03.24
 

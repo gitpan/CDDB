@@ -1,5 +1,5 @@
 #!perl -w
-# $Id: cddb.t,v 1.15 2001/03/25 03:49:03 troc Exp $
+# $Id: cddb.t,v 1.15 2001/03/25 03:49:03 troc Exp troc $
 # Copyright 1998 Rocco Caputo <troc@netrus.net>.  All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the same terms as Perl itself.
@@ -13,9 +13,10 @@ my ($i, $result);
 
 ### test connecting
 
-my $cddb = new CDDB( Host  => 'freedb.freedb.org',
-                     Port  => 8880,
-                     Debug => 0,
+my $cddb = new CDDB( Host           => 'freedb.freedb.org',
+                     Port           => 8880,
+                     Debug          => 0,
+                     Submit_Address => 'test-submit@freedb.org',
                    );
 
 defined($cddb) || print 'not '; print "ok 1\n";

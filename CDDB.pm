@@ -1,4 +1,4 @@
-# $Id: CDDB.pm,v 1.23 2001/03/25 03:48:30 troc Exp $
+# $Id: CDDB.pm,v 1.23 2001/03/25 03:48:30 troc Exp troc $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -30,7 +30,7 @@ eval {
 
 #------------------------------------------------------------------------------
 
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 #------------------------------------------------------------------------------
 # code "adapted" from Net::Cmd, because actually using Net::Cmd hurt real bad
@@ -165,18 +165,34 @@ sub new {
   my $hostname = &hostname();
   my $login = $param{Login} || $ENV{LOGNAME} || $ENV{USER} ||
     getpwuid($<) || croak "can't get login: $!";
-  my $debug = $param{Debug} || 0;
-  my $host  = $param{Host} || '';
-  my $port  = $param{Port} || 0;
-                                        # Mac Freaks Got Spaces!
+
+  my $debug = $param{Debug};
+  $debug = 0 unless defined $debug;
+
+  my $host = $param{Host};
+  $host = '' unless defined $host;
+
+  my $port = $param{Port};
+  $port = 0 unless defined $port;
+
+  my $submit_to = $param{Submit_Address};
+  $submit_to = 'freedb-submit@freedb.org' unless defined $submit_to;
+
+  my $client_name = $param{Client_Name};
+  $client_name = 'CDDB.pm' unless defined $client_name;
+
+  my $client_version = $param{Client_Version};
+  $client_version = $VERSION unless defined $client_version;
+
+  # Mac Freaks Got Spaces!
   $login =~ s/\s+/_/g;
 
   my $self = bless
   { hostname      => $hostname,
     login         => $login,
-    libname       => 'CDDB.pm',
-    libver        => $VERSION,
-    cddbmail      => 'test-submit@freedb.org',
+    libname       => $client_name,
+    libver        => $client_version,
+    cddbmail      => $submit_to,
     debug         => $debug,
     host          => $host,
     port          => $port,
@@ -267,7 +283,8 @@ HOST:
                   );
     $code = $self->response();
     if ($code != 2) {
-      carp "the cddb didn't handshake: " . $self->message();
+      carp( "the cddb didn't handshake: " . $self->message() )
+        if $self->{debug};
       return $self->code();
     }
   }
@@ -296,7 +313,8 @@ sub get_genres {
     return undef;
   }
   else {
-    carp 'error listing categories: ' . $self->text();
+    carp( 'error listing categories: ' . $self->text() )
+      if $self->{debug};
     return undef;
   }
   @genres;
@@ -332,7 +350,8 @@ sub calculate_id {
     }
                                         # virtual track: get-toc error code
     if ($track == 1000) {
-      carp "error in TOC: $ff_begin";
+      carp "error in TOC: $ff_begin"
+        if $self->{debug};
       return undef;
     }
 
@@ -445,7 +464,8 @@ sub get_disc_details {
   $self->command('cddb read', $genre, $id);
   my $code = $self->response();
   if ($code != 2) {
-    carp 'CDDB could not read the disc file: ' . $self->text();
+    carp( 'CDDB could not read the disc file: ' . $self->text() )
+      if $self->{debug};
     return undef;
   }
 
@@ -541,7 +561,7 @@ sub submit_disc {
   (exists $params{Offsets})     or croak "submit_disc needs Offsets";
 
   my $host;
-  if (exists $params{Host}) {
+  if (exists $params{Mail_Host}) {
     $host = $params{Host};
   }
   elsif (exists $ENV{SMTPHOSTS}) {
@@ -619,7 +639,7 @@ CDDB.pm - a high-level interface to the Internet Compact Disc Database
   use CDDB;
 
   ### connect to the CDDB server
-  my $cddb = new CDDB( Host  => 'www.cddb.com',         # default
+  my $cddb = new CDDB( Host  => 'freedb.freedb.org',    # default
                        Port  => 8880,                   # default
                        Login => $login_id,              # defaults to %ENV's
                      ) or die $!;
@@ -686,9 +706,29 @@ interface does not connect to the server until needed, and the CDDB
 protocol may require several separate connections (sometimes one per
 query).
 
-C<new> accepts these parameters: Host (defaults to www.cddb.com), Port
-(defaults to 8880), Login (defaults to your login ID), and Debug
-(defaults to boolean false) parameters.
+C<new> accepts several parameters, all of which have reasonable
+defaults.
+
+B<Host> and B<Port> describe the CD database server to connect to.
+These default to 'freedb.freedb.org' and 8880.
+
+B<Login> is the login ID you want to advertise to the CD database.  It
+defaults to the login ID your computer assigns you, if that can be
+determined.
+
+B<Submit_Address> is the e-mail address where new disc submissions go.
+This defaults to 'submit@freedb.org'.
+
+B<Client_Name> and B<Client_Version> describe the client software used
+to connect to the CD database.  They default to 'CDDB.pm' and
+CDDB.pm's version number.  Please visit your CD database's web site to
+determine if a client name is already in use before changing these
+parameters.
+
+B<Debug>, when set to a true value, enables verbose operational
+information on STDERR.  It's normally not necessary except for the
+developer, but it can also show why a program is failing in more
+detail.
 
 =item C<get_genres()>
 
@@ -701,6 +741,13 @@ The CDDB protocol defines an ID as a hash of track lengths and the
 number of tracks, with an added checksum. The most basic information
 required to calculate this is the CD table of contents (the CD-i track
 offsets, in MSF [Minutes, Seconds, Frames] format).
+
+Note: There is no standard method for acquiring the table of contents
+(TOC) from a compact disc, and this module doesn't attempt to do this.
+As a result, CDDB.pm is usable across a wide selection of operating
+systems.  The author has even heard of people successfully fabricating
+CD tables of contents from mp3 file lengths, so a CD isn't always
+necessary.
 
 C<calculate_id(...)> accepts TOC information as a list of strings.
 Each string contains four fields, separated by whitespace:
