@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.15';
+$VERSION = '1.16';
 
 BEGIN {
   if ($^O eq 'MSWin32') {
@@ -122,7 +122,7 @@ sub getline {
       ? ''
       : pop(@lines)
     );
-    push @{$self->{lines}}, @lines;
+    push @{$self->{lines}}, map { decode('utf8', $_) } @lines;
   }
 
   $self->{frame} = $frame;
@@ -255,9 +255,29 @@ sub new {
   my $client_version = $param{Client_Version};
   $client_version = $VERSION unless defined $client_version;
 
+  # Whether to use utf-8 for submission
+  my $utf8 = $param{Utf8};
+  $utf8 = 1 unless defined $utf8;
+  if ($utf8) {
+    eval {
+      require Encode;
+      import Encode;
+    };
+    if ( $@ ) {
+      carp 'Unable to load the Encode module, falling back to ascii';
+      $utf8 = 0;
+    }
+  }
+
+  eval 'sub encode { $_[1] };sub decode { $_[1] }' unless $utf8;
+
   # Change the cddbp protocol level.
   my $cddb_protocol = $param{Protocol_Version};
-  $cddb_protocol = 1 unless defined $cddb_protocol;
+  $cddb_protocol = ($utf8 ? 6 : 1) unless defined $cddb_protocol;
+  carp <<EOF if $utf8 and $cddb_protocol < 6;
+You have requested protocol level $cddb_protocol. However,
+utf-8 support is only available starting from level 6
+EOF
 
   # Mac Freaks Got Spaces!  Augh!
   $login =~ s/\s+/_/g;
@@ -274,6 +294,7 @@ sub new {
     host          => $host,
     port          => $port,
     cddb_protocol => $cddb_protocol,
+    utf8          => $utf8,
     lines         => [],
     frame         => '',
     response_code => '000',
@@ -903,11 +924,14 @@ sub submit_disc {
   # Build the submission's headers.
   my $header = new Mail::Header;
   $header->add( 'MIME-Version' => '1.0' );
-  $header->add( 'Content-Type' => 'text/plain; charset=iso-8859-1' );
+  my $charset = $self->{'utf8'} ? 'utf-8' : 'iso-8859-1';
+  $header->add( 'Content-Type' => "text/plain; charset=$charset" );
   $header->add( 'Content-Disposition' => 'inline' );
   $header->add( 'Content-Transfer-Encoding' => 'quoted-printable' );
   $header->add( From    => $from );
   $header->add( To      => $self->{cddbmail} );
+  # send a copy to ourselves if we are debugging
+  $header->add( Cc => $from ) if $self->{debug};
   $header->add( Subject => "cddb $params{Genre} $params{Id}" );
 
   # Build the submission's body.
@@ -955,7 +979,7 @@ sub submit_disc {
   # The cddbp submissions daemon will barf if it's not.
   foreach my $line (@message_body) {
     $line .= "\n";
-    $line = MIME::QuotedPrint::encode_qp($line);
+    $line = MIME::QuotedPrint::encode_qp(encode('utf8', $line));
   }
 
   # Bundle the headers and body into an Internet mail.
@@ -1098,9 +1122,16 @@ B<Host> and B<Port> describe the cddbp server to connect to.  These
 default to 'freedb.freedb.org' and 8880, which is a multiplexor for
 all the other freedb servers.
 
+B<Utf8> is a boolean flag. If true, utf-8 will be used when submitting 
+CD info, and for interpreting the data reveived. This requires the 
+L<Encode> module (and probably perl version at least 5.8.0). The 
+default is true if the L<Encode> module can be loaded. Otherwise, it 
+will be false, meaning we fall back to ASCII.
+
 B<Protocol_Version> sets the cddbp version to use.  CDDB.pm will not
 connect to servers that don't support the version specified here.  The
-requested protocol version defaults to 1 if omitted.
+requested protocol version defaults to 1 if B<Utf8> is off, and to 
+6 if it is on.
 
 B<Login> is the login ID you want to advertise to the cddbp server.
 It defaults to the login ID your computer assigns you, if that can be
@@ -1110,7 +1141,8 @@ On Windows systems, it defaults to "win32usr" if no default method can
 be found and no Login parameter is set.
 
 B<Submit_Address> is the e-mail address where new disc submissions go.
-This defaults to 'freedb-submit@freedb.org'.
+This defaults to 'freedb-submit@freedb.org'. Note, that testing 
+submissions should be done via C<test-submit@freedb.org>.
 
 B<Client_Name> and B<Client_Version> describe the client software used
 to connect to the cddbp server.  They default to 'CDDB.pm' and
@@ -1121,6 +1153,8 @@ B<Debug> enables verbose operational information on STDERR when set to
 true.  It's normally not needed, but it can help explain why a program
 is failing.  If someone finds a reproduceable bug, the Debug output
 and a test program would be a big help towards having it fixed.
+In case of submission, if this flag is on, a copy of the submission 
+e-mail will be sent to the I<From> address.
 
 =item get_genres
 
@@ -1485,6 +1519,13 @@ required, and CDDB.pm will try to figure one out on its own.  It will
 look at the SMTPHOSTS environment variable is not defined, it will try
 'mail' and 'localhost' before finally failing.
 
+Revision => REVISION
+
+The revision number. Should be 1 for new submissions, and one higher 
+than the previous one for updates. The previous revision number is 
+available as the C<revision> field in the hash returned by 
+get_disc_details().
+
 =back
 
 =head1 PRIVATE METHODS
@@ -1510,3 +1551,5 @@ same terms as Perl itself.
 Rocco may be contacted at rcaputo@cpan.org.
 
 =cut
+
+# vim: sw=2 tw=70:
