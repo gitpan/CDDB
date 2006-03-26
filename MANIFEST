@@ -1,8 +1,9 @@
-# $Id: MANIFEST,v 1.3 2003/07/31 13:43:30 troc Exp $
-CDDB.pm
+# $Id: MANIFEST 2 2005-09-17 19:54:22Z rcaputo $
+CHANGES
 HISTORY
 MANIFEST
 Makefile.PL
 README
-t/cddb.t
+lib/CDDB.pm
+t/01_cddb.t
 META.yml                                 Module meta-data (added by MakeMaker)

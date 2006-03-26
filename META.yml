@@ -1,10 +1,12 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         CDDB
-version:      1.16
-version_from: CDDB.pm
-installdirs:  site
-requires:
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.28
+--- #YAML:1.0
+name:                CDDB
+version:             1.17
+abstract:            High-level interface to CDDB and freedb servers.
+license:             unknown
+generated_by:        ExtUtils::MakeMaker version 6.30_01
+author:              Rocco Caputo <rcaputo@cpan.org>
+distribution_type:   module
+requires:     
+meta-spec:
+    url: <http://module-build.sourceforge.net/META-spec-new.html>;
+    version: 1.1
