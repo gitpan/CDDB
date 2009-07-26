@@ -1,25 +1,17 @@
-=========================
-2006-03-26 01:08:42 v1_17
-=========================
+=================================
+2009-07-26T03:54:46.902679Z v1_20
+=================================
 
-  2006-03-26 01:08:12 (r3) by rcaputo; lib/CDDB.pm M; t/01_cddb.t M
+  2009-07-26 03:54:11 (r6) by rcaputo
+  lib/CDDB.pm M; t/01_cddb.t M; Makefile.PL M
 
-    Apply Jasper Lievisse Adriaanse's patch to fix the tests. We're
-    testing live data, and it sometimes changes. Also incremented the
-    version number for a new release. 
+    Upgrade tests to Test::More. Fix track offset calculations according
+    to documented test input. Fix test input to match FreeDB
+    documentation. Many thanks to Chuck Cranor for reporting the issue. 
 
-  2005-09-17 19:54:22 (r2) by rcaputo
-  t/01_cddb.t A; t/cddb.t D; MANIFEST M
+  2006-11-06 19:20:39 (r5) by rcaputo; Makefile.PL M
 
-    Remove META.yml from the MANIFEST. Doesn't seem necessary now. Moved
-    the test to a numbered file. 
-
-  2005-09-17 19:46:28 (r1) by rcaputo
-  README A; devel/cddb-command-response-state.dia A; lib/CDDB.pm A; devel
-  A; /trunk A; HISTORY A; t/cddb.t A; /branches A; devel/get-toc.c A; t
-  A; lib A; MANIFEST A; Makefile.PL A; /tags A
-
-    Initial import. 
+    Set a LICENSE. Cheap kwalitee points!
 
 ==============
 End of Excerpt
