@@ -1,4 +1,4 @@
-# $Id: CDDB.pm 6 2009-07-26 03:54:11Z rcaputo $
+# $Id: CDDB.pm 9 2009-07-27 16:01:44Z rcaputo $
 # Documentation and Copyright exist after __END__
 
 package CDDB;
@@ -8,7 +8,7 @@ use strict;
 use vars qw($VERSION);
 use Carp;
 
-$VERSION = '1.20';
+$VERSION = '1.21';
 
 BEGIN {
 	if ($^O eq 'MSWin32') {
@@ -1546,18 +1546,25 @@ Documented as being not documented.
 Please see the cddb.t program in the t (tests) directory.  It
 exercises every aspect of CDDB.pm, including submissions.
 
-=head1 BUGS
+=head1 LINKS
 
-There are no known bugs, but see the README for things that need to be
-done.
+=head2 BUG TRACKER
+
+https://rt.cpan.org/Dist/Display.html?Status=Active&Queue=CDDB
+
+=head2 REPOSITORY
+
+http://thirdlobe.com/svn/cddb/
+
+=head2 OTHER RESOURCES
+
+http://search.cpan.org/dist/CDDB/
 
 =head1 CONTACT AND COPYRIGHT
 
-Copyright 1998-2005 Rocco Caputo.  All rights reserved.  This program
+Copyright 1998-2009 Rocco Caputo.  All rights reserved.  This program
 is free software; you can redistribute it and/or modify it under the
 same terms as Perl itself.
-
-Rocco may be contacted at rcaputo@cpan.org.
 
 =cut
 

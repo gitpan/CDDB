@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: Makefile.PL 6 2009-07-26 03:54:11Z rcaputo $
+# $Id: Makefile.PL 8 2009-07-27 04:39:24Z rcaputo $
 
 use ExtUtils::MakeMaker;
 
@@ -14,6 +14,12 @@ WriteMakefile(
 	VERSION_FROM => 'lib/CDDB.pm',
 	PREREQ_PM    => {
 		'Test::More' => 0,
+	},
+	META_ADD     => {
+		resources  => {
+			license    => 'http://dev.perl.org/licenses/',
+			repository => 'http://thirdlobe.com/svn/cddb/trunk'
+		},
 	},
 	dist         => {
 		COMPRESS   => 'gzip -9',

@@ -1,4 +1,17 @@
 =================================
+2009-07-27T16:02:08.268109Z v1_21
+=================================
+
+  2009-07-27 16:01:44 (r9) by rcaputo; lib/CDDB.pm M
+
+    Reorganize documentation links.
+
+  2009-07-27 04:39:24 (r8) by rcaputo; lib/CDDB.pm M; Makefile.PL M
+
+    Add machine-readable repository directory. Add BUG TRACKER,
+    REPOSITORY and OTHER RESOURCES to the documentation. 
+
+=================================
 2009-07-26T03:54:46.902679Z v1_20
 =================================
 
