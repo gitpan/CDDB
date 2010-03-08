@@ -1,4 +1,4 @@
-# $Id: MANIFEST 2 2005-09-17 19:54:22Z rcaputo $
+# $Id$
 CHANGES
 HISTORY
 MANIFEST
@@ -6,4 +6,5 @@ Makefile.PL
 README
 lib/CDDB.pm
 t/01_cddb.t
+eg/osx-lookup.pl
 META.yml                                 Module meta-data (added by MakeMaker)

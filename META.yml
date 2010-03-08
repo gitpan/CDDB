@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               CDDB
-version:            1.21
+version:            1.220
 abstract:           High-level interface to CDDB and freedb servers.
 author:
     - Rocco Caputo <rcaputo@cpan.org>
@@ -14,7 +14,7 @@ requires:
     Test::More:  0
 resources:
     license:     http://dev.perl.org/licenses/
-    repository:  http://thirdlobe.com/svn/cddb/trunk
+    repository:  http://github.com/rcaputo/cddb-perl
 no_index:
     directory:
         - t

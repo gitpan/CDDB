@@ -1,30 +1,59 @@
-=================================
-2009-07-27T16:02:08.268109Z v1_21
-=================================
+================================
+2010-03-08 01:18:09 -0500 v1_220
+================================
 
-  2009-07-27 16:01:44 (r9) by rcaputo; lib/CDDB.pm M
+  commit 90608ec10375b0009035a5f9e9df9c23a280e680
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Mon Mar 8 01:18:09 2010 -0500
+  
+    Prepare for git based distribution toolchain.
 
+  commit 65c2a4db273159842360735bdfa41de008de295a
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Mon Mar 8 01:14:12 2010 -0500
+  
+    Rearrange repository for git.
+
+  commit 2dc0e52f96553ea8f4adc285e87c6dfe3f9a6979
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Tue Aug 11 04:56:35 2009 -0400
+  
+    Create an OSX example program for Max Wassermann. 
+
+===============================
+2009-07-27 16:01:44 -0400 v1_21
+===============================
+
+  commit 9499e229156600db9e8233469aecf694c87ce6ed
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Mon Jul 27 16:01:44 2009 -0400
+  
     Reorganize documentation links.
 
-  2009-07-27 04:39:24 (r8) by rcaputo; lib/CDDB.pm M; Makefile.PL M
-
+  commit aad2ecd99348e5f27afe131ec8e06c2c3e7ec298
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Mon Jul 27 04:39:24 2009 -0400
+  
     Add machine-readable repository directory. Add BUG TRACKER,
     REPOSITORY and OTHER RESOURCES to the documentation. 
 
-=================================
-2009-07-26T03:54:46.902679Z v1_20
-=================================
+===============================
+2009-07-26 03:54:11 -0400 v1_20
+===============================
 
-  2009-07-26 03:54:11 (r6) by rcaputo
-  lib/CDDB.pm M; t/01_cddb.t M; Makefile.PL M
-
+  commit 9f4b0b679b787d46823fbf27c0758aa4aedcba61
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Sun Jul 26 03:54:11 2009 -0400
+  
     Upgrade tests to Test::More. Fix track offset calculations according
     to documented test input. Fix test input to match FreeDB
-    documentation. Many thanks to Chuck Cranor for reporting the issue. 
+    documentation. Many thanks to Chuck Cranor for reporting the issue.
 
-  2006-11-06 19:20:39 (r5) by rcaputo; Makefile.PL M
-
-    Set a LICENSE. Cheap kwalitee points!
+  commit ab74fb8fcc3af103c6641135fd69113aa7311091
+  Author: Rocco Caputo <rcaputo@cpan.org>
+  Date:   Mon Nov 6 19:20:39 2006 -0500
+  
+    Set a LICENSE. Cheap kwalitee points! 
 
 ==============
 End of Excerpt
