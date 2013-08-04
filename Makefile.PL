@@ -1,30 +1,49 @@
-#!/usr/bin/perl
 
-use ExtUtils::MakeMaker;
+use strict;
+use warnings;
 
-## Touch CHANGES so it exists.
-open(CHANGES, ">>CHANGES") and close CHANGES;
 
-WriteMakefile(
-	NAME         => 'CDDB',
-	AUTHOR       => 'Rocco Caputo <rcaputo@cpan.org>',
-	ABSTRACT     => 'High-level interface to CDDB and freedb servers.',
-	LICENSE      => 'perl',
-	VERSION_FROM => 'lib/CDDB.pm',
-	PREREQ_PM    => {
-		'Test::More' => 0,
-	},
-	META_ADD     => {
-		resources  => {
-			license    => 'http://dev.perl.org/licenses/',
-			repository => 'http://github.com/rcaputo/cddb-perl'
-		},
-	},
-	dist         => {
-		COMPRESS   => 'gzip -9',
-		SUFFIX     => 'gz',
-		PREOP      => (
-			'git-log.pl | tee ./$(DISTNAME)-$(VERSION)/CHANGES > ./CHANGES'
-		),
-	},
+
+use ExtUtils::MakeMaker 6.30;
+
+
+
+my %WriteMakefileArgs = (
+  "ABSTRACT" => "a high-level interface to cddb protocol servers (freedb and CDDB)",
+  "AUTHOR" => "Rocco Caputo <rcaputo\@cpan.org>",
+  "BUILD_REQUIRES" => {},
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
+  },
+  "DISTNAME" => "CDDB",
+  "EXE_FILES" => [],
+  "LICENSE" => "perl",
+  "NAME" => "CDDB",
+  "PREREQ_PM" => {},
+  "VERSION" => "1.221",
+  "test" => {
+    "TESTS" => "t/*.t"
+  }
 );
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
+

@@ -1,60 +1,46 @@
-================================
-2010-03-08 01:18:09 -0500 v1_220
-================================
+==================================================
+Changes from 2012-08-04 00:00:00 +0000 to present.
+==================================================
 
-  commit 90608ec10375b0009035a5f9e9df9c23a280e680
+------------------------------------------
+version 1.221 at 2013-08-04 06:14:36 +0000
+------------------------------------------
+
+  Change: 4e0b8cc01214485a5d4f40b7318f2646f84c5ccb
   Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Mon Mar 8 01:18:09 2010 -0500
-  
-    Prepare for git based distribution toolchain.
+  Date : 2013-08-04 02:13:24 +0000
 
-  commit 65c2a4db273159842360735bdfa41de008de295a
+    Add .gitignore and MANIFEST.SKIP to ignore build artifacts.
+
+    Releases will fail because the release built artifacts look like
+    untracked files. Ignore them in .gitignore. Also ignore temporary
+    files in MANIFEST.SKIP. 
+
+  Change: c5467dc4260c3ceb57e8253957c1449d3d00617a
   Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Mon Mar 8 01:14:12 2010 -0500
-  
-    Rearrange repository for git.
+  Date : 2013-08-04 02:01:30 +0000
 
-  commit 2dc0e52f96553ea8f4adc285e87c6dfe3f9a6979
+    [rt.cpan.org 65060] Don't destroy the server list when connections
+    fail.
+
+    Connections may fail for transient reasons. It's better to assume the
+    servers will come back eventually and take the performance hit on
+    reconnect than to exhaust the list and never succeed again.
+
+    If this fix helps you, thank Timo Santi for reporting the bug. 
+
+  Change: b9835824080c25817a37bcbf6d1c3bb4ab5d51f7
   Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Tue Aug 11 04:56:35 2009 -0400
-  
-    Create an OSX example program for Max Wassermann. 
+  Date : 2013-08-04 01:43:39 +0000
 
-===============================
-2009-07-27 16:01:44 -0400 v1_21
-===============================
+    Switch to Dist::Zilla. 
 
-  commit 9499e229156600db9e8233469aecf694c87ce6ed
+  Change: 15ec95acbfed79a4f4e341e150af25964fc776a3
   Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Mon Jul 27 16:01:44 2009 -0400
-  
-    Reorganize documentation links.
+  Date : 2010-03-08 01:29:07 +0000
 
-  commit aad2ecd99348e5f27afe131ec8e06c2c3e7ec298
-  Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Mon Jul 27 04:39:24 2009 -0400
-  
-    Add machine-readable repository directory. Add BUG TRACKER,
-    REPOSITORY and OTHER RESOURCES to the documentation. 
+    Fix the repository URLs and copyright date in the docs. 
 
-===============================
-2009-07-26 03:54:11 -0400 v1_20
-===============================
-
-  commit 9f4b0b679b787d46823fbf27c0758aa4aedcba61
-  Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Sun Jul 26 03:54:11 2009 -0400
-  
-    Upgrade tests to Test::More. Fix track offset calculations according
-    to documented test input. Fix test input to match FreeDB
-    documentation. Many thanks to Chuck Cranor for reporting the issue.
-
-  commit ab74fb8fcc3af103c6641135fd69113aa7311091
-  Author: Rocco Caputo <rcaputo@cpan.org>
-  Date:   Mon Nov 6 19:20:39 2006 -0500
-  
-    Set a LICENSE. Cheap kwalitee points! 
-
-==============
-End of Excerpt
-==============
+================================================
+Plus 4 releases after 2012-08-04 00:00:00 +0000.
+================================================

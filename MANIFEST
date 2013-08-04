@@ -1,10 +1,16 @@
-# $Id$
 CHANGES
 HISTORY
+LICENSE
 MANIFEST
+MANIFEST.SKIP
+META.yml
 Makefile.PL
 README
-lib/CDDB.pm
-t/01_cddb.t
+README.mkdn
+dist.ini
 eg/osx-lookup.pl
-META.yml                                 Module meta-data (added by MakeMaker)
+lib/CDDB.pm
+t/000-report-versions.t
+t/01_cddb.t
+t/release-pod-coverage.t
+t/release-pod-syntax.t
