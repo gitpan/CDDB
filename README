@@ -3,7 +3,7 @@ NAME
     CDDB)
 
 VERSION
-    version 1.221
+    version 1.222
 
 SYNOPSIS
       use CDDB;

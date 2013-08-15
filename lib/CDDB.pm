@@ -1017,7 +1017,7 @@ CDDB.pm - a high-level interface to cddb protocol servers (freedb and CDDB)
 
 =head1 VERSION
 
-version 1.221
+version 1.222
 
 =head1 SYNOPSIS
 
